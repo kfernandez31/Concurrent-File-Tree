@@ -5,6 +5,9 @@
 
 struct Tree {
     HashMap *subdirectories;
+    pthread_mutex_t reader_lock;
+    pthread_mutex_t writer_lock;
+    //TODO: readers&writers sync algorithm
 };
 
 /**
@@ -209,7 +212,29 @@ static Tree* tree_get(Tree* tree, const char* path) {
 Tree* tree_new() {
     Tree *tree = safe_malloc(sizeof(struct Tree));
     tree->subdirectories = hmap_new();
-    hmap_insert(tree->subdirectories, "/", NULL); //TODO: ?
+    hmap_insert(tree->subdirectories, "/", NULL);
+
+    int err;
+    pthread_mutexattr_t reader_attr, writer_attr;
+    if ((err = pthread_mutexattr_init(&reader_attr)) != SUCCESS) {
+        syserr("ERROR %d: mutexattr_init failed\n", err);
+    }
+    if ((err = pthread_mutexattr_settype(&reader_attr, PTHREAD_MUTEX_ERRORCHECK)) != SUCCESS) {
+        syserr("ERROR %d: mutexattr_settype failed\n", err);
+    }
+    if ((err = pthread_mutex_init(&tree->reader_lock, &reader_attr)) != SUCCESS) {
+        syserr("ERROR %d: mutex init failed\n", err);
+    }
+
+    if ((err = pthread_mutexattr_init(&writer_attr)) != SUCCESS) {
+        syserr("ERROR %d: mutexattr_init failed\n", err);
+    }
+    if ((err = pthread_mutexattr_settype(&writer_attr, PTHREAD_MUTEX_ERRORCHECK)) != SUCCESS) {
+        syserr("ERROR %d: mutexattr_settype failed\n", err);
+    }
+    if ((err = pthread_mutex_init(&tree->writer_lock, &writer_attr)) != SUCCESS) {
+        syserr("ERROR %d: mutex init failed\n", err);
+    }
 
     return tree;
 }
@@ -226,7 +251,13 @@ void tree_free(Tree* tree) {
             }
         }
         hmap_free(tree->subdirectories);
-        tree->subdirectories = NULL;
+        int err;
+        if ((err = pthread_mutex_destroy (&tree->reader_lock)) != 0) {
+            syserr("ERROR %d: mutex destroy failed\n", err);
+        }
+        if ((err = pthread_mutex_destroy (&tree->writer_lock)) != 0) {
+            syserr("ERROR %d: mutex destroy failed\n", err);
+        }
         free(tree);
         tree = NULL;
     }
@@ -336,6 +367,7 @@ int tree_remove(Tree* tree, const char* path) {
     return SUCCESS;
 }
 
+//TODO: rethink whether I can just change the label of the moved directory
 int tree_move(Tree *tree, const char *source, const char *target) {
     if (!tree_is_valid_path_name(source) || !tree_is_valid_path_name(target)) {
         return EINVAL;
@@ -354,7 +386,6 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     if (tree_create(tree, target) == EINVAL) {
         return EINVAL;
     }
-    target_dir = tree_get(tree, target);
 
     const char *key;
     void *value;

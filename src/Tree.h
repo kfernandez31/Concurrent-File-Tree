@@ -5,7 +5,9 @@
 #include <ctype.h>
 #include <assert.h>
 #include <stdio.h>
+#include <pthread.h>
 #include "HashMap.h"
+#include "err.h"
 
 #define MAX_DIR_NAME_LENGTH 255
 #define MAX_PATH_NAME_LENGTH 4095
