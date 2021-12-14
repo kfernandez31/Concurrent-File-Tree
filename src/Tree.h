@@ -55,7 +55,4 @@ int tree_remove(Tree* tree, const char* path);
   * @param target : target directory
   * @return : error code / success
   */
- int tree_move(Tree *tree, const char *source, const char *target);
-
-
-Tree* tree_get_directory(Tree* tree, const char* path); //TODO: Make static
+int tree_move(Tree *tree, const char *source, const char *target);

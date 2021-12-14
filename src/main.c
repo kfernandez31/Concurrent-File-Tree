@@ -1,11 +1,8 @@
 #include "HashMap.h"
 #include "Tree.h"
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #define PRINT_FREE(s, n)  \
 do {                    \
@@ -83,7 +80,7 @@ int main(void)
     tree_create(t, "/b/a/d/");
     //Tree *y = tree_get_directory(t, "/a/");
     tree_move(t, "/a/b/", "/b/x/");
-    //y = tree_get_directory(t, "/a/");
+    //y = tree_get(t, "/a/");
     //y = NULL;
     str = tree_list(t, "/a/");
     PRINT_FREE(str, 4);
@@ -104,14 +101,12 @@ int main(void)
     tree_create(t, "/a/b/c/");
     tree_create(t, "/a/b/d/");
     tree_create(t, "/b/a/d/");
-    tree_move(t, "/a/b/", "/b/a/");
+    int x = tree_move(t, "/a/b/", "/b/a/");
     str = tree_list(t, "/a/");
     PRINT_FREE(str, 8);
     str = tree_list(t, "/b/");
     PRINT_FREE(str, 9);
     tree_free(t);
 
-
-    int x = 5;
     return 0;
 }
