@@ -22,7 +22,7 @@ void print_map(HashMap* map) {
     void* value = NULL;
 
     printf("Size=%zd\n", hmap_size(map));
-    HashMapIterator it = hmap_iterator(map);
+    HashMapIterator it = hmap_new_iterator(map);
     while (hmap_next(map, &it, &key, &value)) {
         printf("Key=%s Value=%p\n", key, value);
     }
