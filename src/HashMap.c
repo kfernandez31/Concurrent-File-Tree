@@ -14,6 +14,18 @@ struct HashMap {
     size_t size; // total number of entries in map.
 };
 
+void print_map(HashMap* map) {
+    const char* key = NULL;
+    void* value = NULL;
+
+    printf("Size=%zd\n", hmap_size(map));
+    HashMapIterator it = hmap_new_iterator(map);
+    while (hmap_next(map, &it, &key, &value)) {
+        printf("Key=%s Value=%p\n", key, value);
+    }
+    printf("\n");
+}
+
 static Pair *hmap_find(HashMap *map, const unsigned h, const char *key, const size_t size) {
     for (Pair* p = map->buckets[h]; p; p = p->next) {
         if (strncmp(key, p->key, size) == 0) {
@@ -23,11 +35,11 @@ static Pair *hmap_find(HashMap *map, const unsigned h, const char *key, const si
     return NULL;
 }
 
-static unsigned get_hash(const char* key) {
+static unsigned get_hash(const char* key, const size_t size) {
     unsigned hash = 17;
-    while (*key) {
+
+    for (size_t i = 0; i < size && *key; i++, key++) {
         hash = (hash << 3) + hash + *key;
-        ++key;
     }
     return hash % N_BUCKETS;
 }
@@ -55,12 +67,12 @@ void hmap_free(HashMap* map) {
 }
 
 void *hmap_get(HashMap *map, const bool pop, const char *key, const size_t size) {
-    unsigned h = get_hash(key);
+    unsigned h = get_hash(key, size);
     Pair* p = hmap_find(map, h, key, size);
     if (p) {
         void *value = p->value;
         if (pop) {
-            hmap_remove(map, key);
+            hmap_remove(map, key, size);
         }
         return value;
     }
@@ -74,7 +86,7 @@ bool hmap_insert(HashMap *map, const char *key, const size_t size, void *value) 
         return false;
     }
 
-    unsigned h = get_hash(key);
+    unsigned h = get_hash(key, size);
     Pair* p = hmap_find(map, h, key, size);
     if (p) {
         return false; // Already exists.
@@ -90,13 +102,13 @@ bool hmap_insert(HashMap *map, const char *key, const size_t size, void *value) 
     return true;
 }
 
-bool hmap_remove(HashMap* map, const char* key) {
-    unsigned h = get_hash(key);
+bool hmap_remove(HashMap *map, const char *key, const size_t size) {
+    unsigned h = get_hash(key, size);
     Pair** pp = &(map->buckets[h]);
 
     while (*pp) {
         Pair* p = *pp;
-        if (strcmp(key, p->key) == 0) {
+        if (strncmp(key, p->key, size) == 0) {
             *pp = p->next;
             free(p->key);
             free(p);

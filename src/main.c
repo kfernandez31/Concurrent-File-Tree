@@ -16,72 +16,56 @@ do {                    \
     }\
 } while (0)
 
-
-void print_map(HashMap* map) {
-    const char* key = NULL;
-    void* value = NULL;
-
-    printf("Size=%zd\n", hmap_size(map));
-    HashMapIterator it = hmap_new_iterator(map);
-    while (hmap_next(map, &it, &key, &value)) {
-        printf("Key=%s Value=%p\n", key, value);
+void print_n_times(char c, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%c", c);
     }
-    printf("\n");
 }
 
+int main(void) {
+    /*Tree *t = tree_new();
+    char *str = NULL;
 
-int main(void)
-{
-/*    HashMap* map = hmap_new();
-    hmap_insert(map, "a", hmap_new());
-    print_map(map);
+    //str = tree_list(t, "/");
+    //PRINT_FREE(str, -1);
 
-    HashMap* child = (HashMap*)hmap_get(map, "a");
-    hmap_free(child);
-    hmap_remove(map, "a");
-    print_map(map);
-
-    hmap_free(map);*/
-
-    Tree *t;
-    char *str;
-/*    t = tree_new();
-
-    str = tree_list(t, "/");
-    PRINT_FREE(str, 0);
-
-    tree_create(t, "zlanazwa");
+    //tree_create(t, "zlanazwa");
 
     tree_create(t, "/foo/");
     str = tree_list(t, "/foo/");
-    PRINT_FREE(str, 1);
+    PRINT_FREE(str, 0);
 
-    tree_create(t, "/foo/barr/");
+    int x = tree_create(t, "/foo/barr/");
     str = tree_list(t, "/foo/");
+    PRINT_FREE(str, 1);
+    str = tree_list(t, "/foo/barr/");
     PRINT_FREE(str, 2);
+
+    x = tree_create(t, "/foo/barr/lol/");
+    x = tree_create(t, "/foo/barr/xd/");
     str = tree_list(t, "/foo/barr/");
     PRINT_FREE(str, 3);
 
-    tree_create(t, "/foo/barr/lol/");
-    tree_create(t, "/foo/barr/xd/");
-    str = tree_list(t, "/tree_pop_recursive/barr/");
-    PRINT_FREE(str, 4);
+    tree_free(t);
 
-    tree_free(t);*/
-
-/*
     t = tree_new();
-    tree_create(t, "/a/");
-    tree_create(t, "/b/");
-    tree_create(t, "/a/b/");
-    tree_create(t, "/b/a/");
-    tree_create(t, "/a/b/c/");
-    tree_create(t, "/a/b/d/");
-    tree_create(t, "/b/a/d/");
-    //Tree *y = tree_get_directory(t, "/a/");
-    tree_move(t, "/a/b/", "/b/x/");
-    //y = tree_get(t, "/a/");
-    //y = NULL;
+    Tree *root = tree_get(t, false, "/", 0);
+    x = tree_create(t, "/a/");
+    Tree *a = tree_get(t, false, "/a/", 1);
+    x = tree_create(t, "/b/");
+    Tree *b = tree_get(t, false, "/b/", 1);
+    x = tree_create(t, "/a/b/");
+    Tree *ab = tree_get(t, false, "/a/b/", 2);
+    x = tree_create(t, "/b/a/");
+    Tree *ba = tree_get(t, false, "/b/a/", 2);
+    x = tree_create(t, "/b/a/d/");
+    Tree *bad = tree_get(t, false, "/b/a/d/", 3);
+    x = tree_create(t, "/a/b/c/");
+    Tree *abc = tree_get(t, false, "/a/b/c/", 3);
+    x = tree_create(t, "/a/b/d/");
+    Tree *abd = tree_get(t, false, "/a/b/d/", 3);
+    x = tree_move(t, "/a/b/", "/b/x/");
+    Tree *bx = tree_get(t, false, "/b/x/", 2);
     str = tree_list(t, "/a/");
     PRINT_FREE(str, 4);
     str = tree_list(t, "/b/");
@@ -90,23 +74,7 @@ int main(void)
     PRINT_FREE(str, 6);
     str = tree_list(t, "/b/x/");
     PRINT_FREE(str, 7);
-    tree_free(t);
-*/
 
-    t = tree_new();
-    tree_create(t, "/a/");
-    tree_create(t, "/b/");
-    tree_create(t, "/a/b/");
-    tree_create(t, "/b/a/");
-    tree_create(t, "/a/b/c/");
-    tree_create(t, "/a/b/d/");
-    tree_create(t, "/b/a/d/");
-    int x = tree_move(t, "/a/b/", "/b/a/");
-    str = tree_list(t, "/a/");
-    PRINT_FREE(str, 8);
-    str = tree_list(t, "/b/");
-    PRINT_FREE(str, 9);
-    tree_free(t);
+    tree_free(t);*/
 
-    return 0;
 }

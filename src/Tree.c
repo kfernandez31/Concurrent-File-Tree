@@ -7,16 +7,33 @@ struct Tree {
     HashMap *subdirectories;
     pthread_mutex_t reader_lock;
     pthread_mutex_t writer_lock;
+    pthread_mutex_t var_protection;
     //TODO: readers&writers sync algorithm, lock
 };
 
 /**
  * Gets the number of immediate subdirectories / tree children.
  * @param tree : file tree
- * @return :  number of subdirectories
+ * @return : number of subdirectories
  */
-static size_t tree_size(Tree *tree) {
+static inline size_t tree_size(Tree *tree) {
     return hmap_size(tree->subdirectories);
+}
+
+/**
+ * Calculates the depth of the `path` based on its number of separators.
+ * @param path : file path
+ * @return : depth of the path
+ */
+static size_t get_path_depth(const char *path) {
+    size_t res = 0;
+    while (*path) {
+        if (*path == SEPARATOR) {
+            res++;
+        }
+        path++;
+    }
+    return res - 1;
 }
 
 /**
@@ -58,51 +75,35 @@ static bool is_valid_path_name(const char *path_name) {
     return true;
 }
 
-/**
- * Extracts the first directory name from the given path.
- * @param path : file path
- * @param root_name : buffer to which the first directory name is written to
- * @return : length of the root directory's name
- */
-static size_t get_first_dir_name_len(const char *path) {
-    size_t length = strlen(path);
-    size_t res = 0;
 
-    for (size_t i = 1; i < length && path[i] != SEPARATOR; i++) {
-        res++;
-    }
-    return res;
-}
 
 /**
- * Returns the inputted path without the last (deepest) directory name.
- * @param path_without_new_dir : buffer to which the result is written to
- * @param new_dir : new directory name
+ * Gets the name and length of `n`-th directory along the path starting from the root.
+ * Passing `n`==0 will return the root.
  * @param path : file path
- * @param path_length : length of the path name
+ * @param n : depth of the directory
+ * @param index : index of the directory in the path
+ * @param length : length of the directory
  */
-static void get_deepest_dir_name_index_and_length(const char *path, size_t *index, size_t *length) {
-    if (strcmp(path, "/") == 0) {
-        // SEPARATOR; TODO: coś tu powinno być
-        return;
-    }
+static void get_nth_dir_name_and_length(const char *path, const size_t n, size_t *index, size_t *length) {
+    size_t len = strlen(path);
+    size_t seps = 0;
 
-    size_t path_len = strlen(path);
-    for (int i = path_len - 2; i >= 0; i--) {
+    for (size_t i = 0; i < len; i++) {
         if (path[i] == SEPARATOR) {
+            seps++;
+        }
+        if (seps == n) {
             *index = i;
-            break;
+            *length = 0;
+            for (i = *index + 1; path[i] != SEPARATOR; i++) {
+                (*length)++;
+            }
+            return;
         }
     }
-    if (*index == -1) {
-        fprintf(stderr, "get_path_without_last_dir(): bad input string\n");
-        exit(EINVAL);
-    }
-
-    *length = 0;
-    for (size_t i = *index + 1; i < path_len && path[i] != SEPARATOR; i++) {
-        *length++;
-    }
+    fprintf(stderr, "get_nth_dir_name_and_length(): invalid n\n");
+    exit(EXIT_FAILURE);
 }
 
 /**
@@ -111,36 +112,37 @@ static void get_deepest_dir_name_index_and_length(const char *path, size_t *inde
  * @param path : file path
  * @return : pointer to the requested directory
  */
-static Tree* tree_get_recursive(Tree* tree, const bool pop, const char* path, const size_t size, const size_t used_bytes) {
-    size_t r_len = get_first_dir_name_len(path);
+static Tree* tree_get_recursive(Tree* tree, const bool pop, const char* path, const size_t max_depth, const size_t cur_depth) {
+    size_t index, length;
+    get_nth_dir_name_and_length(path, 1, &index, &length);
 
-    Tree *next = hmap_get(tree->subdirectories, false, path + 1, r_len);
-    if (!next) {
-        return NULL; // not found
+    Tree *next = hmap_get(tree->subdirectories, false, path + 1, length);
+    if (!next || cur_depth > max_depth) {
+        return NULL; //Directory not found
     }
-    if ((tree_size(tree) == 0 && strcmp(path + r_len + 1, "/") != 0) || used_bytes - 1 > size) {
-        return NULL; // path doesn't exist (is too deep)
+    if (strcmp(path + length + 1, "/") == 0 || cur_depth == max_depth) {
+        return hmap_get(tree->subdirectories, pop, path + 1, length);
     }
-    if (strcmp(path + r_len + 1, "/") == 0) {
-        return hmap_get(tree->subdirectories, pop, path + 1, r_len);
-    }
-    return tree_get_recursive(next, pop, path + r_len + 1, size, used_bytes + r_len + 1);
+    return tree_get_recursive(next, pop, path + length + 1, max_depth, cur_depth + 1);
 }
 
 /**
- * Gets a pointer to the directory specified by the path.
+ * Gets a pointer to the directory specified by the path at `depth`.
+ * Removes the directory from the tree if `pop` is true.
  * @param tree : file tree
+ * @param pop : directory removal flag
  * @param path : file path
+ * @param depth : depth of the directory along the path
  * @return : pointer to the requested directory
  */
-static Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t size) {
+Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth) {
     if (!is_valid_path_name(path)) {
         return NULL;
     }
-    if (strcmp(path, "/") == 0) {
+    if (depth == 0) {
         return tree;
     }
-    return tree_get_recursive(tree, pop, path, size, 0);
+    return tree_get_recursive(tree, pop, path, depth, 1);
 }
 
 
@@ -207,7 +209,7 @@ char *tree_list(Tree *tree, const char *path) {
         return NULL;
     }
 
-    Tree *dir = tree_get(tree, false, path, strlen(path));
+    Tree *dir = tree_get(tree, false, path, get_path_depth(path));
     if (!dir) {
         return NULL;
     }
@@ -249,26 +251,25 @@ char *tree_list(Tree *tree, const char *path) {
     return result;
 }
 
-int tree_create(Tree* tree, const char* path) { //TODO: przejrzeć
+int tree_create(Tree* tree, const char* path) {
     if (!is_valid_path_name(path)) {
         return EINVAL; //Invalid path
     }
 
-    size_t length = strlen(path);
+    size_t depth = get_path_depth(path);
+    size_t index, length;
+    get_nth_dir_name_and_length(path, depth, &index, &length);
 
-    if (tree_get(tree, false, path, length)) {
-        return EEXIST; //Directory already exists within the tree
-    }
-
-    size_t d_index, d_length;
-    get_deepest_dir_name_index_and_length(path, &d_index, &d_length);
-
-    Tree *parent = tree_get(tree, false, path, length - d_length - 1);
+    Tree *parent = tree_get(tree, false, path, get_path_depth(path) - 1);
     if (!parent) {
-        return ENOENT; //The directory's parent does not exist within the tree
+        return ENOENT; //The directory's parent does not exist in the tree
     }
-    Tree *inserted_dir = tree_new();
-    hmap_insert(parent->subdirectories, path + d_index, length - d_length - 2, inserted_dir);
+
+    if (tree_get(parent, false, path + index, 1)) {
+        return EEXIST; //Directory already exists in the tree
+    }
+
+    hmap_insert(parent->subdirectories, path + index + 1, length, tree_new());
 
     return SUCCESS;
 }
@@ -278,9 +279,9 @@ int tree_remove(Tree* tree, const char* path) {
         return EBUSY; //Cannot remove from a "/" directory
     }
 
-    Tree *dir = tree_get(tree, true, path, strlen(path));
+    Tree *dir = tree_get(tree, true, path, get_path_depth(path));
     if (!dir) {
-        return ENOENT; //Path does not exist within the tree
+        return ENOENT; //Path does not exist in the tree
     }
     if (tree_size(dir) > 0) {
         return ENOTEMPTY; //Directory specified in the path is not empty
@@ -290,35 +291,30 @@ int tree_remove(Tree* tree, const char* path) {
     return SUCCESS;
 }
 
-//TODO: rethink whether I can just change the label of the moved directory
 int tree_move(Tree *tree, const char *source, const char *target) {
     if (!is_valid_path_name(source) || !is_valid_path_name(target)) {
         return EINVAL; //Invalid path names
     }
 
-    Tree *source_dir = tree_get(tree, false, source, strlen(source)); //TODO: should probably be true
+    Tree *source_dir = tree_get(tree, true, source, get_path_depth(source));
     if (!source_dir) {
-        return EINVAL;
+        return ENOENT; //The source directory does not exist in the tree
     }
 
-    Tree *target_dir = tree_get(tree, false, target, strlen(target));
-    if (target_dir) {
-      return EEXIST;
+    size_t target_depth = get_path_depth(target);
+    size_t index, length;
+    get_nth_dir_name_and_length(target, target_depth, &index, &length);
+
+    Tree *parent = tree_get(tree, false, target, target_depth - 1);
+    if (!parent) {
+        return ENOENT; //The target's parent does not exist in the tree
     }
 
-    if (tree_create(tree, target) == EINVAL) {
-        return EINVAL;
+    if (tree_get(parent, false, source + index, 1)) {
+        return EEXIST; //The target directory already exists in the tree
     }
 
-    const char *key;
-    void *value;
-    HashMapIterator it = hmap_new_iterator(tree->subdirectories);
-    while (hmap_next(source_dir->subdirectories, &it, &key, &value)) {
-        hmap_remove(source_dir->subdirectories, key);
-    }
-
-    hmap_free(source_dir->subdirectories);
-    free(source_dir);
+    hmap_insert(parent->subdirectories, target + index + 1, length, source_dir);
 
     return SUCCESS;
 }

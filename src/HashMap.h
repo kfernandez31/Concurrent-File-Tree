@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "safe_allocations.h"
@@ -34,7 +34,7 @@ bool hmap_insert(HashMap *map, const char *key, const size_t size, void *value);
 
 // Remove the value under `key` and return true (the value is not free'd),
 // or do nothing and return false if `key` was not present.
-bool hmap_remove(HashMap* map, const char* key);
+bool hmap_remove(HashMap *map, const char *key, const size_t size);
 
 // Return the number of elements in the map.
 size_t hmap_size(HashMap* map);
