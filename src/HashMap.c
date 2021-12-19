@@ -54,16 +54,18 @@ HashMap* hmap_new() {
 }
 
 void hmap_free(HashMap* map) {
-    for (size_t h = 0; h < N_BUCKETS; ++h) {
-        Pair* p = map->buckets[h];
-        while (p) {
-            Pair* q = p;
-            p = p->next;
-            free(q->key);
-            free(q);
+    if (map) {
+        for (size_t h = 0; h < N_BUCKETS; ++h) {
+            Pair *p = map->buckets[h];
+            while (p) {
+                Pair *q = p;
+                p = p->next;
+                free(q->key);
+                free(q);
+            }
         }
+        free(map);
     }
-    free(map);
 }
 
 void *hmap_get(HashMap *map, const bool pop, const char *key, const size_t size) {

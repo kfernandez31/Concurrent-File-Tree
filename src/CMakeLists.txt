@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(MIMUW-FORK C)
+project(FILE-TREE C)
 
 set(CMAKE_CXX_STANDARD "17")
 set(CMAKE_C_STANDARD "11")

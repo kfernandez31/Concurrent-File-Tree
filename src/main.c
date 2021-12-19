@@ -23,19 +23,20 @@ void print_n_times(char c, int n) {
 }
 
 int main(void) {
-    /*Tree *t = tree_new();
+    Tree *t = tree_new();
     char *str = NULL;
+    int x = 0;
 
     //str = tree_list(t, "/");
     //PRINT_FREE(str, -1);
 
     //tree_create(t, "zlanazwa");
 
-    tree_create(t, "/foo/");
+/*    tree_create(t, "/foo/");
     str = tree_list(t, "/foo/");
     PRINT_FREE(str, 0);
 
-    int x = tree_create(t, "/foo/barr/");
+    x = tree_create(t, "/foo/barr/");
     str = tree_list(t, "/foo/");
     PRINT_FREE(str, 1);
     str = tree_list(t, "/foo/barr/");
@@ -44,7 +45,7 @@ int main(void) {
     x = tree_create(t, "/foo/barr/lol/");
     x = tree_create(t, "/foo/barr/xd/");
     str = tree_list(t, "/foo/barr/");
-    PRINT_FREE(str, 3);
+    PRINT_FREE(str, 3);*/
 
     tree_free(t);
 
@@ -64,7 +65,8 @@ int main(void) {
     Tree *abc = tree_get(t, false, "/a/b/c/", 3);
     x = tree_create(t, "/a/b/d/");
     Tree *abd = tree_get(t, false, "/a/b/d/", 3);
-    x = tree_move(t, "/a/b/", "/b/x/");
+    //x = tree_move(t, "/a/b/", "/b/x/");
+    x = tree_move(t, "/a/", "/a/b/d/x/");
     Tree *bx = tree_get(t, false, "/b/x/", 2);
     str = tree_list(t, "/a/");
     PRINT_FREE(str, 4);
@@ -75,6 +77,6 @@ int main(void) {
     str = tree_list(t, "/b/x/");
     PRINT_FREE(str, 7);
 
-    tree_free(t);*/
+    tree_free(t);
 
 }

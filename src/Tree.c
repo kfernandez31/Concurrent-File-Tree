@@ -5,11 +5,24 @@
 
 struct Tree {
     HashMap *subdirectories;
-    pthread_mutex_t reader_lock;
-    pthread_mutex_t writer_lock;
     pthread_mutex_t var_protection;
-    //TODO: readers&writers sync algorithm, lock
+    pthread_cond_t reader_cond;
+    pthread_cond_t writer_cond;
+    int r_count, w_count, r_wait, w_wait;
+    bool change;
 };
+
+/**
+ * Checks whether the caller's result was success.
+ * Calls `syserr` with the caller's error code if one occurred.
+ * @param res : function call result
+ * @param caller : calling function name
+ */
+static void err_check(int res, const char *caller) {
+    if (res != SUCCESS) {
+        syserr("ERROR %d in call of %s\n", caller);
+    }
+}
 
 /**
  * Gets the number of immediate subdirectories / tree children.
@@ -75,8 +88,6 @@ static bool is_valid_path_name(const char *path_name) {
     return true;
 }
 
-
-
 /**
  * Gets the name and length of `n`-th directory along the path starting from the root.
  * Passing `n`==0 will return the root.
@@ -135,8 +146,8 @@ static Tree* tree_get_recursive(Tree* tree, const bool pop, const char* path, co
  * @param depth : depth of the directory along the path
  * @return : pointer to the requested directory
  */
-Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth) {
-    if (!is_valid_path_name(path)) {
+Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth) {//TODO: STATIC
+    if (!tree || !is_valid_path_name(path)) {
         return NULL;
     }
     if (depth == 0) {
@@ -145,35 +156,38 @@ Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth)
     return tree_get_recursive(tree, pop, path, depth, 1);
 }
 
-
+/**
+ * Checks whether both directories lie on the same path in a tree,
+ * furthermore - if path1 branches out to path2.
+ * @param path1 : path to the first directory
+ * @param path2 : path to the second directory
+ * @return : whether the first directory is an ancestor of the second
+ */
+bool is_ancestor(const char *path1, const char *path2) {
+    size_t length1 = strlen(path1);
+    return strncmp(path1, path2, length1) == 0;
+}
 
 
 Tree* tree_new() {
-    Tree *tree = safe_malloc(sizeof(struct Tree));
+    Tree *tree = safe_calloc(sizeof(Tree), 1);
     tree->subdirectories = hmap_new();
-    hmap_insert(tree->subdirectories, "/", 1, NULL);
 
-    int err;
-    pthread_mutexattr_t reader_attr, writer_attr;
-    if ((err = pthread_mutexattr_init(&reader_attr)) != SUCCESS) {
-        syserr("ERROR %d: mutexattr_init failed\n", err);
-    }
-    if ((err = pthread_mutexattr_settype(&reader_attr, PTHREAD_MUTEX_ERRORCHECK)) != SUCCESS) {
-        syserr("ERROR %d: mutexattr_settype failed\n", err);
-    }
-    if ((err = pthread_mutex_init(&tree->reader_lock, &reader_attr)) != SUCCESS) {
-        syserr("ERROR %d: mutex init failed\n", err);
-    }
+    //`var_protection` initialization
+    pthread_mutexattr_t protection_attr;
+    err_check(pthread_mutexattr_init(&protection_attr), "pthread_mutexattr_init");
+    err_check(pthread_mutexattr_settype(&protection_attr, PTHREAD_MUTEX_ERRORCHECK), "pthread_mutexattr_settype");
+    err_check(pthread_mutex_init(&tree->var_protection, &protection_attr), "pthread_mutex_init");
 
-    if ((err = pthread_mutexattr_init(&writer_attr)) != SUCCESS) {
-        syserr("ERROR %d: mutexattr_init failed\n", err);
-    }
-    if ((err = pthread_mutexattr_settype(&writer_attr, PTHREAD_MUTEX_ERRORCHECK)) != SUCCESS) {
-        syserr("ERROR %d: mutexattr_settype failed\n", err);
-    }
-    if ((err = pthread_mutex_init(&tree->writer_lock, &writer_attr)) != SUCCESS) {
-        syserr("ERROR %d: mutex init failed\n", err);
-    }
+    //`reader_cond` initialization
+    pthread_condattr_t reader_attr;
+    err_check(pthread_condattr_init(&reader_attr), "pthread_condattr_init");
+    err_check(pthread_cond_init(&tree->reader_cond, &reader_attr), "pthread_cond_init");
+
+    //`writer_cond` initialization
+    pthread_condattr_t writer_attr;
+    err_check(pthread_condattr_init(&writer_attr), "pthread_condattr_init");
+    err_check(pthread_cond_init(&tree->writer_cond, &writer_attr), "pthread_cond_init");
 
     return tree;
 }
@@ -184,19 +198,15 @@ void tree_free(Tree* tree) {
             const char *key;
             void *value;
             HashMapIterator it = hmap_new_iterator(tree->subdirectories);
-
+            //Free subdirectories' memory
             while (hmap_next(tree->subdirectories, &it, &key, &value)) {
                 tree_free(hmap_get(tree->subdirectories, false, key, strlen(key)));
             }
         }
         hmap_free(tree->subdirectories);
-        int err;
-        if ((err = pthread_mutex_destroy(&tree->reader_lock)) != 0) {
-            syserr("ERROR %d: mutex destroy failed\n", err);
-        }
-        if ((err = pthread_mutex_destroy(&tree->writer_lock)) != 0) {
-            syserr("ERROR %d: mutex destroy failed\n", err);
-        }
+        err_check(pthread_cond_destroy(&tree->writer_cond), "pthread_cond_destroy");
+        err_check(pthread_cond_destroy(&tree->reader_cond), "pthread_cond_destroy");
+        err_check(pthread_mutex_destroy(&tree->var_protection), "pthread_mutex_destroy");
         free(tree);
         tree = NULL;
     }
@@ -219,25 +229,25 @@ char *tree_list(Tree *tree, const char *path) {
         return NULL;
     }
 
-    size_t length = tree_size(dir) - 1; // initially - number of commas
+    size_t length = tree_size(dir) - 1; //Initially == number of commas
     size_t length_used;
     const char* key;
     void* value;
 
     HashMapIterator it = hmap_new_iterator(dir->subdirectories);
     while (hmap_next(dir->subdirectories, &it, &key, &value)) {
-        length += strlen(key); // collect all subdirectories' lengths
+        length += strlen(key); //Collect all subdirectories' lengths
     }
 
     result = safe_calloc(length + subdirs, sizeof(char));
 
-    // Getting the first subdirectory name
+    //Getting the first subdirectory name
     it = hmap_new_iterator(dir->subdirectories);
     hmap_next(dir->subdirectories, &it, &key, &value);
     size_t first_length = strlen(key);
     memcpy(result, key, first_length * sizeof(char));
 
-    // Getting remaining subdirectory names
+    //Getting remaining subdirectory names
     length_used = first_length;
     while (hmap_next(dir->subdirectories, &it, &key, &value)) {
         length_used++;
@@ -296,25 +306,35 @@ int tree_move(Tree *tree, const char *source, const char *target) {
         return EINVAL; //Invalid path names
     }
 
-    Tree *source_dir = tree_get(tree, true, source, get_path_depth(source));
+    if (is_ancestor(source, target)) {
+        return EINVAL; //No directory can be moved to its descendant
+    }
+
+    size_t s_depth = get_path_depth(source);
+    size_t s_index, s_length;
+    get_nth_dir_name_and_length(source, s_depth, &s_index, &s_length);
+    Tree *source_parent = tree_get(tree, false, source, s_depth - 1);
+
+    Tree *source_dir = tree_get(source_parent, false, source + s_index, 1);
     if (!source_dir) {
         return ENOENT; //The source directory does not exist in the tree
     }
 
-    size_t target_depth = get_path_depth(target);
-    size_t index, length;
-    get_nth_dir_name_and_length(target, target_depth, &index, &length);
+    size_t t_depth = get_path_depth(target);
+    size_t t_index, t_length;
+    get_nth_dir_name_and_length(target, t_depth, &t_index, &t_length);
 
-    Tree *parent = tree_get(tree, false, target, target_depth - 1);
+    Tree *parent = tree_get(tree, false, target, t_depth - 1);
     if (!parent) {
         return ENOENT; //The target's parent does not exist in the tree
     }
 
-    if (tree_get(parent, false, source + index, 1)) {
+    if (tree_get(parent, false, source + t_index, 1)) {
         return EEXIST; //The target directory already exists in the tree
     }
 
-    hmap_insert(parent->subdirectories, target + index + 1, length, source_dir);
+    source_dir = tree_get(source_parent, true, source + s_index, 1);
+    hmap_insert(parent->subdirectories, target + t_index + 1, t_length, source_dir);
 
     return SUCCESS;
 }
