@@ -4,79 +4,43 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PRINT_FREE(s, n)  \
-do {                    \
-    if (str == NULL) { \
-        printf( "[%d]\n", n);\
-    } \
-    else {\
-        printf("%s[%d]\n", str, n);\
-        free(str);        \
-        str = NULL;\
-    }\
-} while (0)
+#define NUM_TREE_LIST   1
 
-void print_n_times(char c, int n) {
-    for (int i = 0; i < n; i++) {
-        printf("%c", c);
+#define NUM_TREE_CREATE 1
+#define NUM_TREE_REMOVE 1
+#define NUM_TREE_MOVE   1
+#define NUM_TREE_FREE   1
+#define NUM_ALL         NUM_TREE_LIST + NUM_TREE_CREATE + NUM_TREE_REMOVE + NUM_TREE_MOVE + NUM_TREE_FREE
+
+int main() {
+    pthread_t th[NUM_ALL];
+    pthread_attr_t attr;
+    void *retval;
+
+    err_check(pthread_attr_init(&attr), "pthread_attr_init");
+    err_check(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE), "pthread_attr_setdetachstate");
+
+    for (size_t i = 0; i < NUM_TREE_LIST; i++) {
+        err_check(pthread_create(&th[i], &attr, reader, 0), "pthread_create");
     }
-}
+    for (size_t i = 0; i < NUM_TREE_CREATE; i++) {
+        err_check(pthread_create(&th[i], &attr, reader, 0), "pthread_create");
+    }
+    for (size_t i = 0; i < NUM_TREE_REMOVE; i++) {
+        err_check(pthread_create(&th[i], &attr, reader, 0), "pthread_create");
+    }
+    for (size_t i = 0; i < NUM_TREE_MOVE; i++) {
+        err_check(pthread_create(&th[i], &attr, reader, 0), "pthread_create");
+    }
+    for (size_t i = 0; i < NUM_TREE_FREE; i++) {
+        err_check(pthread_create(&th[i], &attr, reader, 0), "pthread_create");
+    }
 
-int main(void) {
-    Tree *t = tree_new();
-    char *str = NULL;
-    int x = 0;
+    for (size_t i = 0; i < NUM_ALL; i++) {
+        err_check(pthread_join(th[i], &retval), "pthread_join");
+    }
 
-    //str = tree_list(t, "/");
-    //PRINT_FREE(str, -1);
+    err_check(pthread_attr_destroy(&attr), "pthread_attr_destroy");
 
-    //tree_create(t, "zlanazwa");
-
-/*    tree_create(t, "/foo/");
-    str = tree_list(t, "/foo/");
-    PRINT_FREE(str, 0);
-
-    x = tree_create(t, "/foo/barr/");
-    str = tree_list(t, "/foo/");
-    PRINT_FREE(str, 1);
-    str = tree_list(t, "/foo/barr/");
-    PRINT_FREE(str, 2);
-
-    x = tree_create(t, "/foo/barr/lol/");
-    x = tree_create(t, "/foo/barr/xd/");
-    str = tree_list(t, "/foo/barr/");
-    PRINT_FREE(str, 3);*/
-
-    tree_free(t);
-
-    t = tree_new();
-    Tree *root = tree_get(t, false, "/", 0);
-    x = tree_create(t, "/a/");
-    Tree *a = tree_get(t, false, "/a/", 1);
-    x = tree_create(t, "/b/");
-    Tree *b = tree_get(t, false, "/b/", 1);
-    x = tree_create(t, "/a/b/");
-    Tree *ab = tree_get(t, false, "/a/b/", 2);
-    x = tree_create(t, "/b/a/");
-    Tree *ba = tree_get(t, false, "/b/a/", 2);
-    x = tree_create(t, "/b/a/d/");
-    Tree *bad = tree_get(t, false, "/b/a/d/", 3);
-    x = tree_create(t, "/a/b/c/");
-    Tree *abc = tree_get(t, false, "/a/b/c/", 3);
-    x = tree_create(t, "/a/b/d/");
-    Tree *abd = tree_get(t, false, "/a/b/d/", 3);
-    //x = tree_move(t, "/a/b/", "/b/x/");
-    x = tree_move(t, "/a/", "/a/b/d/x/");
-    Tree *bx = tree_get(t, false, "/b/x/", 2);
-    str = tree_list(t, "/a/");
-    PRINT_FREE(str, 4);
-    str = tree_list(t, "/b/");
-    PRINT_FREE(str, 5);
-    str = tree_list(t, "/b/a/");
-    PRINT_FREE(str, 6);
-    str = tree_list(t, "/b/x/");
-    PRINT_FREE(str, 7);
-
-    tree_free(t);
-
+    return EXIT_SUCCESS;
 }

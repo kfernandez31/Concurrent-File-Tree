@@ -9,6 +9,8 @@ add_library(err err.c)
 add_library(HashMap HashMap.c)
 add_library(Tree Tree.c)
 add_executable(main main.c)
+add_executable(test test.c)
+target_link_libraries(test Tree)
 target_link_libraries(main Tree HashMap err pthread)
 
 install(TARGETS DESTINATION .)

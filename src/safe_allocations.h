@@ -1,5 +1,4 @@
-#ifndef __SAFE_ALLOCATIONS_H__
-#define __SAFE_ALLOCATIONS_H__
+#pragma once
 
 #include "stdlib.h"
 
@@ -59,5 +58,3 @@ static inline void *safe_calloc(size_t nmemb, size_t size)
     CHECK_POINTER(ptr);
     return ptr;
 }
-
-#endif //__SAFE_ALLOCATIONS_H__

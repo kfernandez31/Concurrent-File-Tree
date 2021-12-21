@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
+
+#define SUCCESS 0
 
 void syserr(const char* fmt, ...)
 {
@@ -33,4 +32,10 @@ void fatal(const char* fmt, ...)
 
     fprintf(stderr, "\n");
     exit(1);
+}
+
+static void err_check(int res, const char *caller) {
+    if (res != SUCCESS) {
+        syserr("ERROR %d in call of %s\n", caller);
+    }
 }

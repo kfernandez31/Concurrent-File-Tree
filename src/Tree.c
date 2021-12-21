@@ -9,20 +9,9 @@ struct Tree {
     pthread_cond_t reader_cond;
     pthread_cond_t writer_cond;
     int r_count, w_count, r_wait, w_wait;
+    bool occupied;
     bool change;
 };
-
-/**
- * Checks whether the caller's result was success.
- * Calls `syserr` with the caller's error code if one occurred.
- * @param res : function call result
- * @param caller : calling function name
- */
-static void err_check(int res, const char *caller) {
-    if (res != SUCCESS) {
-        syserr("ERROR %d in call of %s\n", caller);
-    }
-}
 
 /**
  * Gets the number of immediate subdirectories / tree children.
@@ -168,6 +157,81 @@ bool is_ancestor(const char *path1, const char *path2) {
     return strncmp(path1, path2, length1) == 0;
 }
 
+/* --------------- Thread synchronization functions --------------- */
+static void reader_entry_protocol(Tree *tree) {
+    err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
+
+    while (tree->w_wait + tree->w_count > 0 && !tree->change) { //Wait if necessary
+        tree->r_wait++;
+        err_check(pthread_cond_wait(&tree->reader_cond, &tree->var_protection), "pthread_cond_wait");
+        tree->r_wait--;
+    }
+    assert(tree->w_count == 0);
+    tree->r_count++;
+}
+
+static void reader_wake_others(Tree *tree) {
+    if (tree->r_wait > 0) { //Wake other readers if there are any
+        err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
+        err_check(pthread_cond_signal(&tree->reader_cond), "pthread_cond_signal");
+    } else {
+        tree->change = false;
+    }
+
+    err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
+}
+
+static void reader_exit_protocol(Tree *tree) {
+    err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
+
+    assert(tree->r_count > 0);
+    assert(tree->w_count == 0);
+    tree->r_count--;
+
+    if (tree->r_count == 0 && tree->w_wait > 0) { //Wake waiting writers if there are any
+        err_check(pthread_cond_signal(&tree->writer_cond), "pthread_cond_signal");
+    }
+
+    err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
+}
+
+static void writer_entry_protocol(Tree *tree) {
+    err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
+
+    while (tree->r_count > 0 || tree->w_count > 0) {
+        tree->w_wait++;
+        err_check(pthread_cond_wait(&tree->writer_cond, &tree->var_protection), "pthread_cond_wait");
+        tree->w_wait--;
+    }
+    assert(tree->r_count == 0);
+    assert(tree->w_count == 0);
+    tree->w_count++;
+
+    err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
+
+}
+
+void writer_exit_protocol(Tree *tree) {
+    err_check(pthread_mutex_lock(&tree->var_protection), "thread_mutex_lock");
+
+    assert(tree->w_count == 1);
+    assert(tree->r_count == 0);
+
+    tree->w_count--;
+
+    if (tree->w_count == 0) {
+        if (tree->r_wait > 0) {
+            tree->change = true;
+            err_check(pthread_cond_signal(&tree->reader_cond), "pthread_cond_signal");
+        }
+        else if (tree->w_wait > 0) {
+            err_check(pthread_cond_signal(&tree->writer_cond), "pthread_cond_signal");
+        }
+    }
+
+    err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
+}
+
 
 Tree* tree_new() {
     Tree *tree = safe_calloc(sizeof(Tree), 1);
@@ -215,6 +279,9 @@ void tree_free(Tree* tree) {
 char *tree_list(Tree *tree, const char *path) {
     char *result = NULL;
 
+    reader_entry_protocol(tree);
+    reader_wake_others(tree);
+
     if (!is_valid_path_name(path)) {
         return NULL;
     }
@@ -258,10 +325,14 @@ char *tree_list(Tree *tree, const char *path) {
         length_used += next_length;
     }
 
+    reader_exit_protocol(tree);
+
     return result;
 }
 
 int tree_create(Tree* tree, const char* path) {
+    writer_entry_protocol(tree);
+
     if (!is_valid_path_name(path)) {
         return EINVAL; //Invalid path
     }
@@ -281,10 +352,13 @@ int tree_create(Tree* tree, const char* path) {
 
     hmap_insert(parent->subdirectories, path + index + 1, length, tree_new());
 
+    writer_exit_protocol(tree);
     return SUCCESS;
 }
 
 int tree_remove(Tree* tree, const char* path) {
+    writer_entry_protocol(tree);
+
     if (strcmp(path, "/") == 0) {
         return EBUSY; //Cannot remove from a "/" directory
     }
@@ -298,10 +372,13 @@ int tree_remove(Tree* tree, const char* path) {
     }
     tree_free(dir);
 
+    writer_exit_protocol(tree);
     return SUCCESS;
 }
 
 int tree_move(Tree *tree, const char *source, const char *target) {
+    writer_entry_protocol(tree);
+
     if (!is_valid_path_name(source) || !is_valid_path_name(target)) {
         return EINVAL; //Invalid path names
     }
@@ -336,5 +413,6 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     source_dir = tree_get(source_parent, true, source + s_index, 1);
     hmap_insert(parent->subdirectories, target + t_index + 1, t_length, source_dir);
 
+    writer_exit_protocol(tree);
     return SUCCESS;
 }
