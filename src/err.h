@@ -13,4 +13,4 @@ extern void fatal(const char* fmt, ...);
  * @param res : function call result
  * @param caller : calling function name
  */
-static void err_check(int res, const char *caller);
+void err_check(int res, const char *caller);
