@@ -134,7 +134,7 @@ static Tree* tree_get_recursive(Tree* tree, const bool pop, const char* path, co
  * @param depth : depth of the directory along the path
  * @return : pointer to the requested directory
  */
-Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth) {//TODO: STATIC
+Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth) {//TODO: STATIC, dorobić tu reader_lock!!!
     if (!tree || !is_valid_path_name(path)) {
         return NULL;
     }
@@ -151,12 +151,36 @@ Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth)
  * @param path2 : path to the second directory
  * @return : whether the first directory is an ancestor of the second
  */
-bool is_ancestor(const char *path1, const char *path2) {
+static bool is_ancestor(const char *path1, const char *path2) {
     size_t length1 = strlen(path1);
     return strncmp(path1, path2, length1) == 0;
 }
 
+/**
+ * Performs `func` recursively on the `tree` node and its entire subtree.
+ * @param tree : file tree
+ * @param op : operation to perform
+ */
+static void iter_tree(Tree *tree, void (func) (Tree*)) {
+    if (tree_size(tree) > 0) { //TODO: chyba niepotrzebne sprawdzenie
+        const char *key;
+        void *value;
+        HashMapIterator it = hmap_new_iterator(tree->subdirectories);
+        while (hmap_next(tree->subdirectories, &it, &key, &value)) {
+            Tree *child = tree_get(tree, false, key, 1);
+            func(child);
+        }
+    }
+    func(tree);
+}
+
 /* --------------- Thread synchronization functions --------------- */
+
+/**
+ * Called by a read-type operation to lock the tree for reading.
+ * Waits if there are other threads writing to the tree.
+ * @param tree : file tree
+ */
 static void reader_lock(Tree *tree) {
     err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
 
@@ -178,6 +202,10 @@ static void reader_lock(Tree *tree) {
     err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
 }
 
+/**
+ * Called by a read-type operation to unlock the tree from reading.
+ * @param tree : file tree
+ */
 static void reader_unlock(Tree *tree) {
     err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
 
@@ -192,6 +220,11 @@ static void reader_unlock(Tree *tree) {
     err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
 }
 
+/**
+ * Called by a write-type operation to lock the tree for writing.
+ * Waits if there are other threads writing or reading from the tree.
+ * @param tree : file tree
+ */
 static void writer_lock(Tree *tree) {
     err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
 
@@ -208,6 +241,10 @@ static void writer_lock(Tree *tree) {
 
 }
 
+/**
+ * Called by a write-type operation to unlock the tree from reading.
+ * @param tree : file tree
+ */
 void writer_unlock(Tree *tree) {
     err_check(pthread_mutex_lock(&tree->var_protection), "thread_mutex_lock");
 
@@ -227,7 +264,6 @@ void writer_unlock(Tree *tree) {
 
     err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
 }
-
 
 Tree* tree_new() {
     Tree *tree = safe_calloc(1, sizeof(Tree));
@@ -254,7 +290,7 @@ Tree* tree_new() {
 
 void tree_free(Tree* tree) {
     if (tree) {
-        if (tree_size(tree) > 0) {
+        if (tree_size(tree) > 0) { //TODO: chyba niepotrzebne sprawdzenie
             const char *key;
             void *value;
             HashMapIterator it = hmap_new_iterator(tree->subdirectories);
@@ -338,11 +374,10 @@ int tree_create(Tree* tree, const char* path) {
     get_nth_dir_name_and_length(path, depth, &index, &length);
 
     Tree *parent = tree_get(tree, false, path, depth - 1);
-    writer_lock(parent);
-
     if (!parent) {
         return ENOENT; //The directory's parent does not exist in the tree
     }
+    writer_lock(parent);
 
     if (tree_get(parent, false, path + index, 1)) {
         writer_unlock(tree);
@@ -371,17 +406,20 @@ int tree_remove(Tree* tree, const char* path) {
     }
     writer_lock(parent);
 
-    Tree *child = tree_get(parent, true, path + index, 1);
+    Tree *child = tree_get(parent, false, path + index, 1);
     if (!child) {
         writer_unlock(parent);
-        return EEXIST; //The directory already exists in the tree
+        return ENOENT; //The directory doesn't exist in the tree
     }
     writer_lock(child);
+
     if (tree_size(child) > 0) {
-        writer_unlock(tree);
+        writer_unlock(child);
+        writer_unlock(parent);
         return ENOTEMPTY; //The directory specified in the path is not empty
     }
 
+    child = tree_get(parent, true, path + index, 1);
     tree_free(child);
 
     writer_unlock(child);
@@ -393,14 +431,9 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     if (!is_valid_path_name(source) || !is_valid_path_name(target)) {
         return EINVAL; //Invalid path names
     }
-
     if (is_ancestor(source, target)) {
         return EINVAL; //No directory can be moved to its descendant
     }
-
-    //writer_lock(target_parent source'a);
-    //writer_lock(source);
-    //writer_lock() (poddrzewka source'a)
 
     size_t s_depth = get_path_depth(source);
     size_t s_index, s_length;
@@ -417,7 +450,7 @@ int tree_move(Tree *tree, const char *source, const char *target) {
         writer_unlock(source_parent);
         return ENOENT; //The source does not exist in the tree
     }
-    writer_lock(source_dir);
+    iter_tree(source_dir, writer_lock);
 
     size_t t_depth = get_path_depth(target);
     size_t t_index, t_length;
@@ -425,7 +458,7 @@ int tree_move(Tree *tree, const char *source, const char *target) {
 
     Tree *target_parent = tree_get(tree, false, target, t_depth - 1);
     if (!target_parent) {
-        writer_unlock(source_dir);
+        iter_tree(source_dir, writer_unlock);
         writer_unlock(source_parent);
         return ENOENT; //The target's parent does not exist in the tree
     }
@@ -433,7 +466,7 @@ int tree_move(Tree *tree, const char *source, const char *target) {
 
     if (tree_get(target_parent, false, source + t_index, 1)) {
         writer_unlock(target_parent);
-        writer_unlock(source_dir);
+        iter_tree(source_dir, writer_unlock);
         writer_unlock(source_parent);
         return EEXIST; //The target already exists in the tree
     }
@@ -442,7 +475,7 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     hmap_insert(target_parent->subdirectories, target + t_index + 1, t_length, source_dir);
 
     writer_unlock(target_parent);
-    writer_unlock(source_dir);
+    iter_tree(source_dir, writer_unlock);
     writer_unlock(source_parent);
     return SUCCESS;
 }
