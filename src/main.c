@@ -224,8 +224,8 @@ void TEST_many_create_many_remove(const size_t num_threads) {
 void TEST_edge_cases() {
     Tree *t = tree_new();
 
-    assert(!tree_create(t, "zlanazwa"));
-    assert(!tree_move(t, "/a/", "/a/b/d/x/"));
+    assert(tree_create(t, "zlanazwa") != 0);
+    assert(tree_move(t, "/a/", "/a/b/d/x/") != 0);
 
     tree_free(t);
 }
@@ -304,15 +304,68 @@ void TEST_tree_move_example() {
     tree_free(t);
 }
 
+// Test sprawdzający, czy dobrze się sprawdza poprawność ścieżki.
+// Test zakłada, że tree_create na samym początku sprawdza, czy string jest poprawny.
+
+
+const int MAX_PATH_LENGTH = 4095;
+const int MAX_FOLDER_NAME_LENGTH = 255;
+
+bool my_path_valid(const char *path) {
+    Tree *t = tree_new();
+    int ret = tree_create(t, path);
+    tree_free(t);
+    return ret != EINVAL;
+}
+
+char* fill_with_component(char *s, size_t len) {
+    s[0] = '/';
+    for (size_t i = 1; i <= len; ++i)
+        s[i] = 'a';
+    s[len + 1] = '/';
+    s[len + 2] = '\0';
+    return s + len + 1;
+}
+
+void valid_path() {
+    assert(my_path_valid("/"));
+    assert(my_path_valid("/a/"));
+    assert(my_path_valid("/a/b/"));
+    assert(my_path_valid("/ab/bc/"));
+    assert(my_path_valid("/a/bb/ccc/dddd/eeeee/"));
+    assert(!my_path_valid(""));
+    assert(!my_path_valid("//"));
+    assert(!my_path_valid("/a//"));
+    assert(!my_path_valid("/_/"));
+
+    char s[MAX_PATH_LENGTH + 2];
+
+    fill_with_component(s, MAX_FOLDER_NAME_LENGTH);
+    assert(my_path_valid(s));
+
+    fill_with_component(s, MAX_FOLDER_NAME_LENGTH + 1);
+    assert(!my_path_valid(s));
+
+    char *curr_start = s;
+    while ((curr_start - s) + (MAX_FOLDER_NAME_LENGTH + 1) < MAX_PATH_LENGTH)
+        curr_start = fill_with_component(curr_start, MAX_FOLDER_NAME_LENGTH);
+
+    fill_with_component(curr_start, MAX_PATH_LENGTH - (curr_start - s) - 2);
+    assert(my_path_valid(s));
+
+    fill_with_component(curr_start, MAX_PATH_LENGTH - (curr_start - s) - 2 + 1);
+    assert(!my_path_valid(s));
+}
+
 int main(void) {
     init_mutexes();
-
+    valid_path();
     /* Sequential tests */
-    // TEST_edge_cases();
+    //TEST_edge_cases();
     // TEST_tree_move_example();
 
     /* Concurrent tests */
-     TEST_many_list(100);
+//     TEST_many_list(100);
 //     TEST_many_create(7);
 //     TEST_many_create_many_list(4);
 //     TEST_many_create_many_remove(88);

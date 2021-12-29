@@ -9,9 +9,6 @@
 #include "HashMap.h"
 #include "err.h"
 
-#define MAX_DIR_NAME_LENGTH 255
-#define MAX_PATH_NAME_LENGTH 4095
-
 /* Let "Tree" mean the same as "struct Tree". */
 typedef struct Tree Tree;
 
@@ -58,5 +55,3 @@ int tree_remove(Tree* tree, const char* path);
   * @return : error code / success
   */
 int tree_move(Tree *tree, const char *source, const char *target);
-
-Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t depth);
