@@ -36,8 +36,8 @@ set(TEST_SOURCE_FILES
         ${TESTS_PATH}deadlock.h
         ${TESTS_PATH}liveness.c
         ${TESTS_PATH}liveness.h
-        #${TESTS_PATH}sequential_big_random.c
-        #${TESTS_PATH}sequential_big_random.h
+        ${TESTS_PATH}sequential_big_random.c
+        ${TESTS_PATH}sequential_big_random.h
         ${TESTS_PATH}sequential_small.c
         ${TESTS_PATH}sequential_small.h
         ${TESTS_PATH}test.c

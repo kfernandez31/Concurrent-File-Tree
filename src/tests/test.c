@@ -13,9 +13,9 @@
 
 int main() {
 	fprintf(stderr, "Each test/subtest should run in less than 1 second.\n");
-	sequential_small();
-    //sequential_big_random();
-	valid_path();
+/*	sequential_small();
+    valid_path();*/
+    sequential_big_random();
 //	deadlock();
 //	concurrent_same_as_some_sequential();
 //	liveness();

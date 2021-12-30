@@ -35,7 +35,7 @@ void get_nth_dir_name_and_length(const char *path, const size_t n, size_t *index
 
 /**
  * Checks whether both directories lie on the same path in a tree,
- * furthermore - if path1 branches out to path2.
+ * and if path2 branches out from path1.
  * @param path1 : path to the first directory
  * @param path2 : path to the second directory
  * @return : whether the first directory is an ancestor of the second
