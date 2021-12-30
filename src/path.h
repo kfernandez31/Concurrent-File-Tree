@@ -7,7 +7,7 @@
 #include <ctype.h>
 
 #define MAX_DIR_NAME_LENGTH 255
-#define MAX_PATH_NAME_LENGTH 4095
+#define MAX_PATH_LENGTH 4095
 
 /**
  * Calculates the depth of the `path` based on its number of separators.

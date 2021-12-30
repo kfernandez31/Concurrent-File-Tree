@@ -16,7 +16,7 @@ bool is_valid_path_name(const char *path_name) {
     size_t length = strlen(path_name);
     bool sep = false;
 
-    if (length == 0 || length > MAX_PATH_NAME_LENGTH ||
+    if (length == 0 || length > MAX_PATH_LENGTH ||
         path_name[0] != SEPARATOR || path_name[length - 1] != SEPARATOR) {
         return false;
     }

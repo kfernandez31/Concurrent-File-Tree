@@ -58,3 +58,15 @@ HashMapIterator hmap_new_iterator(HashMap* map);
 // ```
 bool hmap_next(HashMap* map, HashMapIterator* it, const char** key, void** value);
 
+
+// Return an array containing all keys, lexicographically sorted.
+// The result is null-terminated.
+// Keys are not copied, they are only valid as long as the map.
+// The caller should free the result.
+const char** make_map_contents_array(HashMap* map);
+
+// Return a string containing all keys in map, sorted, comma-separated.
+// The result has no trailing comma. An empty map yields an empty string.
+// The caller should free the result.
+char* make_map_contents_string(HashMap* map);
+

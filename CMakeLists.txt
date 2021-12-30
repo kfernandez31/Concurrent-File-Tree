@@ -19,21 +19,39 @@ set(SOURCE_FILES
         src/main.c
         src/err.c src/err.h
         src/HashMap.c src/HashMap.h
+        src/path.c src/path.h
         src/Tree.c src/Tree.h
-        src/mtwister.c src/mtwister.h
         src/safe_allocations.h
         )
 
 # Wskazujemy plik wykonywalny (kalkulatora).
 add_executable(file_tree ${SOURCE_FILES})
 
-#[[
+set(TESTS_PATH "src/tests/")
 set(TEST_SOURCE_FILES
+        ${TESTS_PATH}concurrent_same_as_some_sequential.c
+        ${TESTS_PATH}concurrent_same_as_some_sequential.h
+        #${TESTS_PATH}create_sequential_big_random.c
+        ${TESTS_PATH}deadlock.c
+        ${TESTS_PATH}deadlock.h
+        ${TESTS_PATH}liveness.c
+        ${TESTS_PATH}liveness.h
+        #${TESTS_PATH}sequential_big_random.c
+        #${TESTS_PATH}sequential_big_random.h
+        ${TESTS_PATH}sequential_small.c
+        ${TESTS_PATH}sequential_small.h
+        ${TESTS_PATH}test.c
+        ${TESTS_PATH}utils.c
+        ${TESTS_PATH}utils.h
+        ${TESTS_PATH}valid_path.c
+        ${TESTS_PATH}valid_path.h
+        src/err.c src/err.h
+        src/HashMap.c src/HashMap.h
+        src/path.c src/path.h
         src/Tree.c src/Tree.h
-        src/test.c
+        src/safe_allocations.h
         )
 
-# Wskazujemy plik wykonywalny (testów).
+# Wskazujemy plik wykonwalny (testów).
 add_executable(test EXCLUDE_FROM_ALL ${TEST_SOURCE_FILES})
 set_target_properties(test PROPERTIES OUTPUT_NAME file_tree_test)
-#]]

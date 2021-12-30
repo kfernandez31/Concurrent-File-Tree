@@ -6,8 +6,8 @@
 struct Tree {
     HashMap *subdirectories;
     pthread_mutex_t var_protection;
-    pthread_cond_t reader_cond, writer_cond, descendants_cond;
-    int r_count, w_count, r_wait, w_wait, active_descendants; //TODO: naming
+    pthread_cond_t reader_cond, writer_cond, refcount_cond;
+    int r_count, w_count, r_wait, w_wait, refcount;
     bool change;
 };
 
@@ -19,8 +19,6 @@ struct Tree {
 static inline size_t tree_size(Tree *tree) {
     return hmap_size(tree->subdirectories);
 }
-
-//TODO: odpowiednie lock/unlock w iter_tree i iter_path
 
 /**
  * Performs `func` recursively on the `tree` node and its entire subtree.
@@ -59,15 +57,15 @@ static void iter_path_recursive(Tree *tree, const char *path, const size_t depth
     size_t index, length;
     get_nth_dir_name_and_length(path, 1, &index, &length);
 
-    Tree *next = hmap_get(tree->subdirectories, false, path + 1, length);
-
-    if (!next || cur_depth > depth) {
-        return; //Directory not found
-    }
     if (cur_depth == depth) {
         Tree *last = hmap_get(tree->subdirectories, false, path + 1, length);
         func(last);
         return;
+    }
+
+    Tree *next = hmap_get(tree->subdirectories, false, path + 1, length);
+    if (!next || cur_depth > depth) {
+        return; //Directory not found
     }
 
     iter_path_recursive(next, path + length + 1, depth, cur_depth + 1, tail_recursive, func);
@@ -204,16 +202,17 @@ static Tree* tree_get_recursive(Tree* tree, const bool pop, const char* path, co
     get_nth_dir_name_and_length(path, 1, &index, &length);
 
     reader_lock(tree);
-    Tree *next = hmap_get(tree->subdirectories, false, path + 1, length);
 
-    if (!next || cur_depth > depth) {
-        reader_unlock(tree);
-        return NULL; //Directory not found
-    }
     if (cur_depth == depth) {
         Tree *res = hmap_get(tree->subdirectories, pop, path + 1, length);
         reader_unlock(tree);
         return res;
+    }
+
+    Tree *next = hmap_get(tree->subdirectories, false, path + 1, length);
+    if (!next || cur_depth > depth) {
+        reader_unlock(tree);
+        return NULL; //Directory not found
     }
 
     reader_unlock(tree);
@@ -246,8 +245,8 @@ static Tree *tree_get(Tree *tree, const bool pop, const char *path, const size_t
  */
 static void wait_for_descendants_to_finish(Tree *tree) {
     err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
-    while (tree->active_descendants > 0) { //Wait if necessary
-        err_check(pthread_cond_wait(&tree->descendants_cond, &tree->var_protection), "pthread_cond_wait");
+    while (tree->refcount > 0) { //Wait if necessary
+        err_check(pthread_cond_wait(&tree->refcount_cond, &tree->var_protection), "pthread_cond_wait");
     }
     err_check(pthread_mutex_unlock(&tree->var_protection), "pthread_mutex_unlock");
 }
@@ -257,9 +256,9 @@ static void wait_for_descendants_to_finish(Tree *tree) {
  * Increments the number of active descendants under the node.
  * @param node : node in a file tree
  */
-void increment_active_descendants(Tree *node) {
+void increment_refcount(Tree *node) {
     err_check(pthread_mutex_lock(&node->var_protection), "pthread_mutex_lock");
-    node->active_descendants--;
+    node->refcount++;
     err_check(pthread_mutex_unlock(&node->var_protection), "pthread_mutex_unlock");
 }
 
@@ -268,11 +267,11 @@ void increment_active_descendants(Tree *node) {
  * Decrements the number of active descendants under the node and wakes any threads waiting for them to become 0.
  * @param node : node in a file tree
  */
-void decrement_active_descendants(Tree *node) {
+void decrement_refcount(Tree *node) {
     err_check(pthread_mutex_lock(&node->var_protection), "pthread_mutex_lock");
-    node->active_descendants--;
+    node->refcount--;
     err_check(pthread_mutex_unlock(&node->var_protection), "pthread_mutex_unlock");
-    err_check(pthread_cond_signal(&node->descendants_cond), "pthread_cond_signal");
+    err_check(pthread_cond_signal(&node->refcount_cond), "pthread_cond_signal");
 }
 
 /**
@@ -284,7 +283,7 @@ static void node_free(Tree *node) {
     hmap_free(node->subdirectories);
     err_check(pthread_cond_destroy(&node->writer_cond), "pthread_cond_destroy");
     err_check(pthread_cond_destroy(&node->reader_cond), "pthread_cond_destroy");
-    err_check(pthread_cond_destroy(&node->descendants_cond), "pthread_cond_destroy");
+    err_check(pthread_cond_destroy(&node->refcount_cond), "pthread_cond_destroy");
     err_check(pthread_mutex_destroy(&node->var_protection), "pthread_mutex_destroy");
     free(node);
     node = NULL;
@@ -313,12 +312,11 @@ Tree* tree_new() {
     //`descendants_cond` initialization
     pthread_condattr_t descendants_attr;
     err_check(pthread_condattr_init(&descendants_attr), "pthread_condattr_init");
-    err_check(pthread_cond_init(&tree->descendants_cond, &descendants_attr), "pthread_cond_init");
+    err_check(pthread_cond_init(&tree->refcount_cond, &descendants_attr), "pthread_cond_init");
 
     return tree;
 }
 
-//TODO: czy to wymaga write-synchronizacji?
 void tree_free(Tree* tree) {
     iter_tree(tree, true, node_free);
 }
@@ -336,13 +334,15 @@ char *tree_list(Tree *tree, const char *path) {
         return NULL;
     }
     reader_lock(dir);
-    iter_path(tree, path, depth, false, increment_active_descendants);
+    iter_path(tree, path, depth, false, increment_refcount);
 
     size_t subdirs = tree_size(dir);
     if (subdirs == 0) {
-        iter_path(tree, path, depth, true, decrement_active_descendants);
+        iter_path(tree, path, depth, true, decrement_refcount);
         reader_unlock(dir);
-        return NULL;
+        result = safe_malloc(1 * sizeof(char));
+        result[0] = '\0';
+        return result;
     }
 
     size_t length = tree_size(dir) - 1; //Initially == number of commas
@@ -374,7 +374,7 @@ char *tree_list(Tree *tree, const char *path) {
         length_used += next_length;
     }
 
-    iter_path(tree, path, depth, true, decrement_active_descendants);
+    iter_path(tree, path, depth, true, decrement_refcount);
     reader_unlock(dir);
     return result;
 }
@@ -396,17 +396,17 @@ int tree_create(Tree* tree, const char* path) {
         return ENOENT; //The directory's parent does not exist in the tree
     }
     writer_lock(parent);
-    iter_path(tree, path, c_depth - 1, false, increment_active_descendants);
+    iter_path(tree, path, c_depth - 1, false, increment_refcount);
 
-    if (hmap_get(parent->subdirectories, false, path + c_index, c_length)) {
-        iter_path(tree, path, c_depth - 1, true, decrement_active_descendants);
+    if (hmap_get(parent->subdirectories, false, path + c_index + 1, c_length)) {
+        iter_path(tree, path, c_depth - 1, true, decrement_refcount);
         writer_unlock(parent);
         return EEXIST; //The directory already exists in the tree
     }
 
     hmap_insert(parent->subdirectories, path + c_index + 1, c_length, tree_new());
 
-    iter_path(tree, path, c_depth - 1, true, decrement_active_descendants);
+    iter_path(tree, path, c_depth - 1, true, decrement_refcount);
     writer_unlock(parent);
     return SUCCESS;
 }
@@ -426,25 +426,25 @@ int tree_remove(Tree* tree, const char* path) {
         return ENOENT; //The directory's parent does not exist in the tree
     }
     writer_lock(parent);
-    iter_path(tree, path, c_depth - 1, false, increment_active_descendants);
+    iter_path(tree, path, c_depth - 1, false, increment_refcount);
 
-    Tree *child = hmap_get(parent->subdirectories, false, path + c_index, c_length);
+    Tree *child = hmap_get(parent->subdirectories, false, path + c_index + 1, c_length);
     if (!child) {
-        iter_path(tree, path, c_depth - 1, true, decrement_active_descendants);
+        iter_path(tree, path, c_depth - 1, true, decrement_refcount);
         writer_unlock(parent);
         return ENOENT; //The directory doesn't exist in the tree
     }
 
     if (tree_size(child) > 0) {
-        iter_path(tree, path, c_depth - 1, true, decrement_active_descendants);
+        iter_path(tree, path, c_depth - 1, true, decrement_refcount);
         writer_unlock(parent);
         return ENOTEMPTY; //The directory specified in the path is not empty
     }
 
-    child = hmap_get(parent->subdirectories, true, path + c_index, c_length);
+    child = hmap_get(parent->subdirectories, true, path + c_index + 1, c_length);
     tree_free(child);
 
-    iter_path(tree, path, c_depth - 1, true, decrement_active_descendants);
+    iter_path(tree, path, c_depth - 1, true, decrement_refcount);
     writer_unlock(parent);
     return SUCCESS;
 }
@@ -460,48 +460,40 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     size_t s_depth = get_path_depth(source);
     size_t s_index, s_length;
     get_nth_dir_name_and_length(source, s_depth, &s_index, &s_length);
-
     Tree *source_parent = tree_get(tree, false, source, s_depth - 1);
     if (!source_parent) {
         return ENOENT; //The source's parent does not exist in the tree
     }
-    writer_lock(source_parent);
-
-    Tree *source_dir = hmap_get(source_parent->subdirectories, false, source + s_index, s_length);
-    if (!source_dir) {
-        writer_unlock(source_parent);
-        return ENOENT; //The source does not exist in the tree
-    }
-    wait_for_descendants_to_finish(source_dir);
-    iter_path(tree, source, s_depth, false, increment_active_descendants);
 
     size_t t_depth = get_path_depth(target);
     size_t t_index, t_length;
     get_nth_dir_name_and_length(target, t_depth, &t_index, &t_length);
-
     Tree *target_parent = tree_get(tree, false, target, t_depth - 1);
     if (!target_parent) {
-        iter_path(tree, source, s_depth, true, decrement_active_descendants);
-        writer_unlock(source_parent);
-        return ENOENT; //The target's parent does not exist in the tree
+        return ENOENT; //The target directory's parent does not exist in the tree
     }
-    writer_lock(target_parent);
 
-    if (hmap_get(target_parent->subdirectories, false, source + t_index, t_length)) {
-        writer_unlock(target_parent);
-        iter_path(tree, source, s_depth, true, decrement_active_descendants);
-        writer_unlock(source_parent);
-        return EEXIST; //The target already exists in the tree
+    Tree *source_dir = hmap_get(source_parent->subdirectories, false, source + s_index + 1, s_length);
+    if (!source_dir) {
+        return ENOENT; //The source directory does not exist in the tree
     }
-    iter_path(tree, target, t_depth - 1, false, increment_active_descendants);
 
-    source_dir = hmap_get(source_parent->subdirectories, true, source + s_index, s_length); //Pop the source directory
+    writer_lock(source_parent);
+    wait_for_descendants_to_finish(source_dir);
+
+    iter_path(tree, source, s_depth - 1, false, increment_refcount);
+    source_dir = hmap_get(source_parent->subdirectories, true, source + s_index + 1, s_length); //Pop the source directory
+
+    if (source_parent != target_parent) {
+        writer_lock(target_parent);
+    }
     hmap_insert(target_parent->subdirectories, target + t_index + 1, t_length, source_dir);
 
-    iter_path(tree, target, t_depth - 1, true, decrement_active_descendants);
-    writer_unlock(target_parent);
-    iter_path(tree, source, s_depth, true, decrement_active_descendants);
+    iter_path(tree, target, t_depth - 1, true, decrement_refcount);
+    if (source_parent != target_parent) {
+        writer_unlock(target_parent);
+    }
+    iter_path(tree, source, s_depth - 1, true, decrement_refcount);
     writer_unlock(source_parent);
-
     return SUCCESS;
 }
