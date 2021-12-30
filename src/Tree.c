@@ -124,7 +124,7 @@ static void iter_path(Tree *tree, const char *path, const size_t depth, const bo
  * Waits if there are other threads writing to the tree.
  * @param tree : file tree
  */
-static void reader_lock(Tree *tree) {
+static void reader_lock(Tree *tree) { //TODO: kiedy robić reader_lock(), a kiedy zwykłe P(var_protection) ?
     err_check(pthread_mutex_lock(&tree->var_protection), "pthread_mutex_lock");
 
     while ((tree->w_wait || tree->w_count) && !tree->r_priority) { //Wait if necessary
@@ -504,12 +504,6 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     if (IS_ROOT(target)) {
         return EEXIST; //Cannot assign a new root
     }
-    if (strcmp(source, target) == 0) {
-        return ENOENT; //Cannot move the source directory to itself
-    }
-    if (is_ancestor(source, target)) {
-        return EINVAL; //No directory can be moved to its descendant
-    }
 
     size_t s_depth = get_path_depth(source);
     size_t s_index, s_length;
@@ -518,6 +512,13 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     if (!source_parent) {
         return ENOENT; //The source's parent does not exist in the tree
     }
+    err_check(pthread_mutex_lock(&source_parent->var_protection), "pthread_mutex_lock"); //TODO: czy to ok?
+    Tree *source_dir = hmap_get(source_parent->subdirectories, false, source + s_index + 1, s_length);
+    if (!source_dir) {
+        err_check(pthread_mutex_unlock(&source_parent->var_protection), "pthread_mutex_unlock");
+        return ENOENT; //The source directory does not exist in the tree
+    }
+    err_check(pthread_mutex_unlock(&source_parent->var_protection), "pthread_mutex_unlock");
 
     size_t t_depth = get_path_depth(target);
     size_t t_index, t_length;
@@ -526,13 +527,22 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     if (!target_parent) {
         return ENOENT; //The target directory's parent does not exist in the tree
     }
-
-    writer_lock(source_parent);
-    Tree *source_dir = hmap_get(source_parent->subdirectories, false, source + s_index + 1, s_length);
-    if (!source_dir) {
-        writer_unlock(source_parent);
-        return ENOENT; //The source directory does not exist in the tree
+    err_check(pthread_mutex_lock(&target_parent->var_protection), "pthread_mutex_lock"); //TODO: czy to ok?
+    if (hmap_get(target_parent->subdirectories, false, target + t_index + 1, t_length)) {
+        err_check(pthread_mutex_unlock(&target_parent->var_protection), "pthread_mutex_unlock");
+        if (strcmp(source, target) == 0) { //TODO
+            return SUCCESS; //The source and target are the same - nothing to move
+        }
+        else {
+            return EEXIST; //There already exists a directory with the same name as the target
+        }
     }
+    err_check(pthread_mutex_unlock(&target_parent->var_protection), "pthread_mutex_unlock");
+    if (is_ancestor(source, target)) { //TODO
+        return EINVAL; //No directory can be moved to its descendant
+    }
+
+    writer_lock(source_parent); //TODO: czy dobra kolejność?
     wait_on_refcount_cond(source_dir); //Wait until refcount reaches zero
 
     iter_path(tree, source, s_depth - 1, false, increment_ref_count);
@@ -546,7 +556,7 @@ int tree_move(Tree *tree, const char *source, const char *target) {
     if (source_parent != target_parent) {
         writer_unlock(target_parent);
     }
-    iter_path(tree, target, t_depth - 1, true, decrement_ref_count); //TODO: czy kolejność ma znaczenie?
+    iter_path(tree, target, t_depth - 1, true, decrement_ref_count); //TODO: czy dobra kolejność?
     writer_unlock(source_parent);
     iter_path(tree, source, s_depth - 1, true, decrement_ref_count);
     return SUCCESS;
