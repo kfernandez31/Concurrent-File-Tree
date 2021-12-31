@@ -55,3 +55,5 @@ int tree_remove(Tree* tree, const char* path);
   * @return : error code / success
   */
 int tree_move(Tree *tree, const char *source, const char *target);
+
+Tree *get_node(Tree *tree, const bool pop, const char *path, const size_t depth); //TODO: WYWAL STĄD
