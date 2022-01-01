@@ -5,6 +5,7 @@
 
 int f(int err) { if (-20 <= err && err <= -1) return -1; return err; }
 void sequential_big_random() {
+    int x[183];
 	Tree *tree = tree_new();
 	assert(f(tree_create(tree, "/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -114,11 +115,6 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/", "/c/a/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/c/")) == 0);
 	assert(f(tree_create(tree, "/c/c/c/")) == 0);
-    Tree *a = get_node(tree, false, "/a/", 1);
-    Tree *b = get_node(tree, false, "/b/", 1);
-    Tree *c = get_node(tree, false, "/c/", 1);
-    Tree *cc = get_node(tree, false, "/c/c/", 1);
-    Tree *ccc = get_node(tree, false, "/c/c/c/", 1);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/", "/")) == EEXIST);
@@ -158,7 +154,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/c/b/", "/a/a/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/c/")) == -1);
+	x[0] = f(tree_move(tree, "/c/", "/c/c/"));
 	assert(f(tree_move(tree, "/a/b/b/", "/b/c/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/b/", "/b/a/b/")) == ENOENT);
@@ -172,12 +168,12 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/a/c/", "/a/c/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/b/a/b/", "/a/b/")) == ENOENT);
-	//assert(f(tree_move(tree, "/a/", "/a/b/b/")) == -1);
+    x[1] = f(tree_move(tree, "/a/", "/a/b/b/"));
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/c/b/a/", "/c/c/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+    x[2] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_move(tree, "/a/b/", "/b/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/")) == EBUSY);
 	assert(f(tree_move(tree, "/b/", "/a/c/a/c/")) == ENOENT);
@@ -204,7 +200,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/a/")) == 0);
 	assert(f(tree_remove(tree, "/c/b/b/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/c/")) == -1);
+    x[3] = f(tree_move(tree, "/b/", "/b/c/"));
 	assert(f(tree_remove(tree, "/c/c/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
@@ -332,8 +328,8 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/c/a/", "/c/b/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/a/b/b/", "/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/b/", "/c/b/c/c/")) == -1);
-	assert(f(tree_move(tree, "/b/b/", "/b/b/c/b/")) == -1);
+    x[4] = f(tree_move(tree, "/c/b/", "/c/b/c/c/"));
+    x[5] = f(tree_move(tree, "/b/b/", "/b/b/c/b/"));
 	assert(f(tree_move(tree, "/a/c/c/a/", "/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
@@ -369,7 +365,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/b/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/c/c/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/c/a/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/a/b/b/")) == -1);
+    x[6] = f(tree_move(tree, "/b/", "/b/a/b/b/"));
 	assert(f(tree_create(tree, "/b/b/a/")) == 0);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/a/c/")) == 0);
@@ -434,7 +430,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/a/b/c/", "/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/b/", "/a/b/c/b/")) == -1);
+	x[7] = f(tree_move(tree, "/a/b/", "/a/b/c/b/"));
 	assert(f(tree_remove(tree, "/b/a/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/a/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/b/b/c/", "/")) == EEXIST);
@@ -651,7 +647,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/b/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/c/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/c/b/a/")) == -1);
+    x[8] = f(tree_move(tree, "/a/", "/a/c/b/a/"));
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/a/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/c/")) == 0);
@@ -690,7 +686,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/a/", "/c/c/a/")) == 0);
 	assert(f(tree_create(tree, "/c/c/c/")) == 0);
-	assert(f(tree_move(tree, "/c/", "/c/c/c/b/")) == -1);
+	x[9] = f(tree_move(tree, "/c/", "/c/c/c/b/"));
 	assert(f(tree_move(tree, "/", "/a/b/b/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
@@ -750,7 +746,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/c/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/a/c/c/")) == -1);
+	x[10] = f(tree_move(tree, "/b/", "/b/a/c/c/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/")) == 0);
@@ -779,7 +775,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/b/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/a/a/", "/a/c/a/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/a/c/c/")) == -1);
+	x[11] = f(tree_move(tree, "/a/", "/a/a/c/c/"));
 	assert(f(tree_create(tree, "/b/c/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/c/a/", "/a/b/")) == 0);
@@ -817,7 +813,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/b/", "/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/a/c/", "/b/a/c/a/")) == -1);
+	x[12] = f(tree_move(tree, "/b/a/c/", "/b/a/c/a/"));
 	assert(f(tree_create(tree, "/a/a/")) == 0);
 	assert(f(tree_create(tree, "/c/a/")) == 0);
 	assert(f(tree_move(tree, "/c/b/b/", "/c/a/b/c/")) == ENOENT);
@@ -843,7 +839,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/c/", "/c/b/c/a/")) == -1);
+	x[13] = f(tree_move(tree, "/c/", "/c/b/c/a/"));
 	assert(f(tree_move(tree, "/b/b/a/", "/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
@@ -897,7 +893,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/c/")) == 0);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/b/c/a/", "/b/b/")) == 0);
-	assert(f(tree_move(tree, "/b/", "/b/a/c/")) == -1);
+	x[14] = f(tree_move(tree, "/b/", "/b/a/c/"));
 	assert(f(tree_move(tree, "/c/", "/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/c/a/a/b/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -909,7 +905,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/c/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/b/c/", "/")) == EEXIST);
-	assert(f(tree_move(tree, "/b/b/", "/b/b/a/a/")) == -1);
+	x[15] = f(tree_move(tree, "/b/b/", "/b/b/a/a/"));
 	assert(f(tree_move(tree, "/a/c/a/", "/b/c/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/c/a/")) == 0);
@@ -1136,7 +1132,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/c/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/c/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/a/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/a/a/a/")) == -1);
+	x[16] = f(tree_move(tree, "/c/", "/c/a/a/a/"));
 	assert(f(tree_remove(tree, "/c/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/a/c/b/")) == ENOENT);
@@ -1228,7 +1224,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/a/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/c/", "/c/a/a/")) == -1);
+	x[17] = f(tree_move(tree, "/c/", "/c/a/a/"));
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/b/c/", "/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/c/a/")) == ENOENT);
@@ -1388,7 +1384,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/c/b/b/")) == EBUSY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/a/", "/c/a/a/a/")) == -1);
+	x[18] = f(tree_move(tree, "/c/a/", "/c/a/a/a/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/b/b/", "/c/b/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/", "/b/a/c/")) == 0);
@@ -1433,7 +1429,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/", "/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/b/b/")) == -1);
+	x[19] = f(tree_move(tree, "/b/", "/b/b/b/"));
 	assert(f(tree_remove(tree, "/c/b/b/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/b/c/")) == ENOENT);
@@ -1559,13 +1555,13 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/a/b/a/")) == 0);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/")) == -1);
+	x[20] = f(tree_move(tree, "/b/", "/b/c/b/"));
 	assert(f(tree_remove(tree, "/c/b/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/c/c/a/")) == -1);
+	x[21] = f(tree_move(tree, "/a/", "/a/c/c/a/"));
 	assert(f(tree_move(tree, "/b/c/b/", "/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/b/b/", "/c/b/b/c/")) == -1);
+	x[22] = f(tree_move(tree, "/c/b/b/", "/c/b/b/c/"));
 	assert(f(tree_create(tree, "/b/c/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/b/")) == 0);
@@ -1651,7 +1647,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/a/")) == -1);
+	x[23] = f(tree_move(tree, "/b/", "/b/c/b/a/"));
 	assert(f(tree_move(tree, "/c/b/b/", "/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/a/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/c/a/")) == EBUSY);
@@ -1687,7 +1683,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/c/a/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/c/")) == 0);
-	assert(f(tree_move(tree, "/c/", "/c/a/a/")) == -1);
+	x[24] = f(tree_move(tree, "/c/", "/c/a/a/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/", "/a/c/a/")) == 0);
@@ -1716,7 +1712,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/b/a/a/", "/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/b/", "/c/a/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/", "/a/a/")) == -1);
+	x[25] = f(tree_move(tree, "/a/", "/a/a/"));
 	assert(f(tree_move(tree, "/b/a/a/c/", "/a/c/a/c/")) == 0);
 	assert(f(tree_move(tree, "/c/b/c/", "/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
@@ -1786,7 +1782,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/c/c/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/", "/a/c/")) == -1);
+	x[26] = f(tree_move(tree, "/a/", "/a/c/"));
 	assert(f(tree_create(tree, "/c/b/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/c/b/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/b/a/c/a/")) == ENOENT);
@@ -1845,7 +1841,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/c/a/")) == -1);
+	x[27] = f(tree_move(tree, "/b/", "/b/c/a/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/a/", "/c/a/")) == ENOENT);
@@ -1864,7 +1860,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/a/")) == 0);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/c/b/")) == -1);
+	x[28] = f(tree_move(tree, "/a/c/", "/a/c/c/b/"));
 	assert(f(tree_create(tree, "/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/a/c/a/", "/b/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -1877,7 +1873,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/b/c/")) == 0);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/b/a/", "/b/b/a/c/")) == -1);
+	x[29] = f(tree_move(tree, "/b/b/a/", "/b/b/a/c/"));
 	assert(f(tree_remove(tree, "/a/a/")) == 0);
 	assert(f(tree_create(tree, "/c/")) == 0);
 	assert(f(tree_move(tree, "/a/b/", "/b/")) == EEXIST);
@@ -1907,14 +1903,14 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/c/")) == 0);
-	assert(f(tree_move(tree, "/b/c/", "/b/c/a/")) == -1);
+	x[30] = f(tree_move(tree, "/b/c/", "/b/c/a/"));
 	assert(f(tree_remove(tree, "/b/c/")) == 0);
 	assert(f(tree_move(tree, "/", "/b/a/c/c/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/a/c/c/", "/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/a/")) == 0);
-	assert(f(tree_move(tree, "/c/", "/c/c/")) == -1);
+	x[31] = f(tree_move(tree, "/c/", "/c/c/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/c/b/", "/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/b/a/")) == EEXIST);
@@ -1973,7 +1969,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/a/b/", "/b/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/", "/b/c/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/a/", "/a/a/a/")) == -1);
+	x[32] = f(tree_move(tree, "/a/a/", "/a/a/a/"));
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
@@ -1983,7 +1979,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/c/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/b/c/c/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/c/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/a/")) == -1);
+	x[33] = f(tree_move(tree, "/b/", "/b/c/a/"));
 	assert(f(tree_move(tree, "/", "/a/a/b/c/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/a/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
@@ -2038,8 +2034,8 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/b/a/a/")) == 0);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/")) == -1);
-	assert(f(tree_move(tree, "/a/", "/a/b/a/")) == -1);
+	x[34] = f(tree_move(tree, "/b/", "/b/c/"));
+	x[35] = f(tree_move(tree, "/a/", "/a/b/a/"));
 	assert(f(tree_move(tree, "/b/a/", "/a/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/c/", "/b/a/b/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
@@ -2062,7 +2058,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/b/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/b/c/")) == -1);
+	x[36] = f(tree_move(tree, "/c/", "/c/b/c/"));
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/c/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/c/a/")) == ENOENT);
@@ -2140,7 +2136,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_move(tree, "/c/c/", "/b/b/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+	x[37] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_remove(tree, "/a/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/", "/a/b/")) == 0);
@@ -2154,10 +2150,10 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/")) == 0);
 	assert(f(tree_create(tree, "/c/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/b/c/b/")) == -1);
+	x[38] = f(tree_move(tree, "/c/", "/c/b/c/b/"));
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/b/", "/c/b/c/")) == -1);
+	x[39] = f(tree_move(tree, "/c/b/", "/c/b/c/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/b/a/b/", "/a/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/a/c/")) == ENOENT);
@@ -2262,7 +2258,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/", "/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/b/")) == -1);
+	x[40] = f(tree_move(tree, "/c/", "/c/b/b/b/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/a/c/")) == 0);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
@@ -2295,7 +2291,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/c/a/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/c/a/b/", "/a/c/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/b/", "/a/b/b/")) == -1);
+	x[41] = f(tree_move(tree, "/a/b/", "/a/b/b/"));
 	assert(f(tree_remove(tree, "/c/c/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/a/", "/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/", "/")) == EEXIST);
@@ -2420,7 +2416,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/b/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/a/", "/b/a/a/b/")) == -1);
+	x[42] = f(tree_move(tree, "/b/a/", "/b/a/a/b/"));
 	assert(f(tree_move(tree, "/a/a/", "/c/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/c/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/a/c/")) == ENOENT);
@@ -2586,7 +2582,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/b/a/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/c/b/")) == -1);
+	x[43] = f(tree_move(tree, "/b/", "/b/b/c/b/"));
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -2627,7 +2623,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/b/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/", "/a/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/a/", "/a/a/c/")) == -1);
+	x[44] = f(tree_move(tree, "/a/a/", "/a/a/c/"));
 	assert(f(tree_remove(tree, "/a/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/a/b/")) == ENOENT);
@@ -2873,7 +2869,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/")) == 0);
-	assert(f(tree_move(tree, "/b/a/", "/b/a/b/")) == -1);
+	x[45] = f(tree_move(tree, "/b/a/", "/b/a/b/"));
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/a/a/a/", "/b/")) == ENOENT);
@@ -3019,7 +3015,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/b/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/a/")) == 0);
 	assert(f(tree_move(tree, "/b/c/a/", "/a/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/a/a/")) == -1);
+	x[46] = f(tree_move(tree, "/b/", "/b/a/a/"));
 	assert(f(tree_move(tree, "/", "/b/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/b/b/")) == 0);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
@@ -3035,7 +3031,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/a/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/a/c/", "/b/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/c/")) == -1);
+	x[47] = f(tree_move(tree, "/c/", "/c/b/b/c/"));
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/", "/a/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/c/c/c/b/")) == EBUSY);
@@ -3058,7 +3054,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/b/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/a/b/b/a/", "/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/a/a/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/c/c/")) == -1);
+	x[48] = f(tree_move(tree, "/b/", "/b/b/c/c/"));
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/c/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
@@ -3110,7 +3106,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/", "/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/b/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/b/a/")) == -1);
+	x[49] = f(tree_move(tree, "/a/", "/a/b/a/"));
 	assert(f(tree_create(tree, "/b/")) == 0);
 	assert(f(tree_move(tree, "/", "/b/c/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/")) == 0);
@@ -3280,7 +3276,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/a/c/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+	x[50] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_create(tree, "/c/a/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/a/")) == ENOENT);
@@ -3330,12 +3326,12 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/c/b/a/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+	x[51] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_move(tree, "/", "/c/c/b/")) == EBUSY);
 	assert(f(tree_move(tree, "/b/b/", "/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/")) == 0);
 	assert(f(tree_remove(tree, "/b/a/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/c/")) == -1);
+	x[52] = f(tree_move(tree, "/c/", "/c/b/b/c/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/")) == ENOENT);
@@ -3366,7 +3362,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/b/c/b/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/", "/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/c/", "/b/c/b/a/")) == -1);
+	x[53] = f(tree_move(tree, "/b/c/", "/b/c/b/a/"));
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/b/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/", "/")) == EEXIST);
@@ -3399,7 +3395,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/c/")) == 0);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/a/", "/c/a/b/c/")) == -1);
+	x[54] = f(tree_move(tree, "/c/a/", "/c/a/b/c/"));
 	assert(f(tree_move(tree, "/b/a/", "/c/b/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -3414,7 +3410,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/c/a/a/", "/a/b/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/c/c/a/", "/b/a/c/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/b/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/")) == -1);
+	x[55] = f(tree_move(tree, "/b/", "/b/c/b/"));
 	assert(f(tree_remove(tree, "/b/c/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/b/a/b/c/")) == 0);
@@ -3464,7 +3460,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/a/c/")) == 0);
 	assert(f(tree_remove(tree, "/a/c/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/a/a/")) == -1);
+	x[56] = f(tree_move(tree, "/b/", "/b/a/a/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/c/a/b/", "/a/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/a/b/")) == EBUSY);
@@ -3579,7 +3575,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/c/c/")) == -1);
+	x[57] = f(tree_move(tree, "/a/", "/a/c/c/"));
 	assert(f(tree_create(tree, "/a/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
@@ -3589,7 +3585,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/b/a/")) == -1);
+	x[58] = f(tree_move(tree, "/a/c/", "/a/c/b/a/"));
 	assert(f(tree_move(tree, "/c/c/b/", "/c/b/")) == 0);
 	assert(f(tree_create(tree, "/c/c/c/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/b/a/")) == ENOENT);
@@ -3668,14 +3664,14 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/")) == 0);
 	assert(f(tree_remove(tree, "/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/a/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/c/", "/c/c/a/")) == -1);
+	x[59] = f(tree_move(tree, "/c/c/", "/c/c/a/"));
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/a/a/", "/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/a/a/a/", "/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/a/")) == -1);
+	x[60] = f(tree_move(tree, "/c/", "/c/a/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/a/a/b/")) == ENOENT);
@@ -3686,7 +3682,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == 0);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/b/a/", "/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/c/", "/c/c/c/")) == -1);
+	x[61] = f(tree_move(tree, "/c/c/", "/c/c/c/"));
 	assert(f(tree_create(tree, "/b/b/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/a/c/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -3915,7 +3911,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/a/", "/a/c/")) == -1);
+	x[62] = f(tree_move(tree, "/a/", "/a/c/"));
 	assert(f(tree_remove(tree, "/a/b/")) == 0);
 	assert(f(tree_move(tree, "/a/c/a/", "/b/c/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
@@ -4014,7 +4010,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/a/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/a/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/b/c/")) == -1);
+	x[63] = f(tree_move(tree, "/a/c/", "/a/c/b/c/"));
 	assert(f(tree_move(tree, "/c/c/b/", "/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/b/")) == 0);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -4061,7 +4057,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/c/c/b/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/c/", "/b/c/b/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/c/a/")) == -1);
+	x[64] = f(tree_move(tree, "/a/", "/a/c/a/"));
 	assert(f(tree_move(tree, "/", "/c/a/c/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/b/b/", "/a/")) == ENOENT);
@@ -4077,7 +4073,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/")) == -1);
+	x[65] = f(tree_move(tree, "/b/", "/b/b/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/b/b/a/")) == 0);
 	assert(f(tree_create(tree, "/b/a/a/")) == ENOENT);
@@ -4139,7 +4135,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/b/")) == 0);
 	assert(f(tree_move(tree, "/b/c/c/c/", "/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/", "/c/b/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/a/")) == -1);
+	x[66] = f(tree_move(tree, "/c/", "/c/a/"));
 	assert(f(tree_move(tree, "/a/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/c/b/b/c/")) == 0);
@@ -4221,7 +4217,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/a/", "/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/c/b/c/")) == -1);
+	x[67] = f(tree_move(tree, "/c/", "/c/c/b/c/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -4246,7 +4242,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/c/")) == 0);
 	assert(f(tree_move(tree, "/b/a/b/", "/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/c/c/b/")) == -1);
+	x[68] = f(tree_move(tree, "/c/", "/c/c/c/b/"));
 	assert(f(tree_move(tree, "/c/", "/b/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/")) == ENOENT);
@@ -4280,17 +4276,17 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/a/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/", "/c/c/c/a/")) == -1);
+	x[69] = f(tree_move(tree, "/c/", "/c/c/c/a/"));
 	assert(f(tree_create(tree, "/b/")) == 0);
 	assert(f(tree_move(tree, "/b/a/c/a/", "/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/b/c/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/b/a/")) == -1);
+	x[183] = f(tree_move(tree, "/a/", "/a/b/a/"));
 	assert(f(tree_create(tree, "/b/a/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/a/c/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/c/c/")) == -1);
+	x[70] = f(tree_move(tree, "/a/", "/a/c/c/"));
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -4301,7 +4297,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/")) == -1);
+	x[71] = f(tree_move(tree, "/b/", "/b/c/b/"));
 	assert(f(tree_move(tree, "/", "/a/a/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/c/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
@@ -4321,7 +4317,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/", "/b/b/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/a/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/a/")) == -1);
+	x[72] = f(tree_move(tree, "/a/c/", "/a/c/a/"));
 	assert(f(tree_move(tree, "/c/b/c/a/", "/a/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/b/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/a/c/")) == ENOENT);
@@ -4347,7 +4343,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/c/")) == 0);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/b/")) == -1);
+	x[73] = f(tree_move(tree, "/b/", "/b/b/b/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -4364,8 +4360,8 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/b/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/a/a/a/c/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/c/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/a/b/", "/a/a/b/a/")) == -1);
-	assert(f(tree_move(tree, "/c/", "/c/c/c/")) == -1);
+	x[74] = f(tree_move(tree, "/a/a/b/", "/a/a/b/a/"));
+	x[75] = f(tree_move(tree, "/c/", "/c/c/c/"));
 	assert(f(tree_move(tree, "/a/c/b/a/", "/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/a/b/")) == 0);
 	assert(f(tree_remove(tree, "/b/c/b/")) == ENOENT);
@@ -4396,7 +4392,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/a/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/b/a/c/", "/c/c/b/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/b/", "/a/b/c/")) == -1);
+	x[76] = f(tree_move(tree, "/a/b/", "/a/b/c/"));
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/a/c/c/", "/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/b/a/a/")) == ENOENT);
@@ -4508,7 +4504,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/a/b/b/")) == -1);
+	x[77] = f(tree_move(tree, "/b/", "/b/a/b/b/"));
 	assert(f(tree_move(tree, "/a/b/c/", "/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/a/a/c/")) == 0);
@@ -4540,7 +4536,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/b/b/", "/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/b/", "/c/b/b/c/")) == -1);
+	x[78] = f(tree_move(tree, "/c/b/", "/c/b/b/c/"));
 	assert(f(tree_remove(tree, "/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/c/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/")) == ENOENT);
@@ -4554,7 +4550,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/a/a/c/", "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/a/a/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/b/", "/c/b/c/")) == -1);
+	x[79] = f(tree_move(tree, "/c/b/", "/c/b/c/"));
 	assert(f(tree_create(tree, "/a/c/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/")) == ENOENT);
@@ -4567,7 +4563,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/c/a/")) == -1);
+	x[80] = f(tree_move(tree, "/c/", "/c/c/a/"));
 	assert(f(tree_remove(tree, "/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/a/c/a/")) == EBUSY);
 	assert(f(tree_move(tree, "/c/b/b/b/", "/b/c/")) == ENOENT);
@@ -4628,7 +4624,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/b/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/b/", "/c/c/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/c/")) == -1);
+	x[81] = f(tree_move(tree, "/b/", "/b/c/c/"));
 	assert(f(tree_move(tree, "/", "/a/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
@@ -4647,7 +4643,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/a/", "/c/a/a/")) == -1);
+	x[82] = f(tree_move(tree, "/c/a/", "/c/a/a/"));
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/b/a/", "/b/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/b/")) == 0);
@@ -4671,14 +4667,14 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/a/a/", "/a/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/c/")) == -1);
+	x[83] = f(tree_move(tree, "/a/c/", "/a/c/c/"));
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/b/a/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/c/", "/a/b/b/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/c/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/b/")) == -1);
+	x[84] = f(tree_move(tree, "/c/", "/c/b/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/a/c/a/c/")) == ENOENT);
@@ -4728,7 +4724,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/c/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/b/c/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/")) == -1);
+	x[85] = f(tree_move(tree, "/b/", "/b/c/"));
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/c/a/")) == 0);
 	assert(f(tree_create(tree, "/c/b/a/b/")) == 0);
@@ -4747,7 +4743,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/a/")) == 0);
 	assert(f(tree_create(tree, "/a/c/c/")) == 0);
 	assert(f(tree_create(tree, "/a/b/b/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/b/b/c/")) == -1);
+	x[86] = f(tree_move(tree, "/a/", "/a/b/b/c/"));
 	assert(f(tree_create(tree, "/a/b/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/c/b/")) == 0);
@@ -4775,7 +4771,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/a/b/", "/a/b/b/")) == -1);
+	x[87] = f(tree_move(tree, "/a/b/", "/a/b/b/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/")) == 0);
@@ -4872,7 +4868,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/c/b/", "/a/c/c/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/a/b/c/")) == -1);
+	x[88] = f(tree_move(tree, "/b/", "/b/a/b/c/"));
 	assert(f(tree_move(tree, "/", "/a/a/a/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/a/", "/b/c/c/")) == 0);
@@ -4928,7 +4924,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/a/c/c/")) == EBUSY);
 	assert(f(tree_move(tree, "/b/c/b/", "/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/c/", "/b/c/a/a/")) == -1);
+	x[89] = f(tree_move(tree, "/b/c/", "/b/c/a/a/"));
 	assert(f(tree_remove(tree, "/c/c/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/c/a/")) == EBUSY);
 	assert(f(tree_move(tree, "/c/c/", "/b/b/a/")) == 0);
@@ -5037,7 +5033,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/", "/a/c/c/c/")) == -1);
+	x[90] = f(tree_move(tree, "/a/", "/a/c/c/c/"));
 	assert(f(tree_remove(tree, "/a/b/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/b/", "/c/")) == ENOENT);
@@ -5052,7 +5048,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/c/b/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/b/a/c/", "/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/c/c/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+	x[91] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_move(tree, "/b/", "/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/b/c/c/")) == 0);
 	assert(f(tree_remove(tree, "/b/c/b/")) == ENOENT);
@@ -5109,7 +5105,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/b/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/a/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/")) == -1);
+	x[92] = f(tree_move(tree, "/b/", "/b/c/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/b/")) == EBUSY);
 	assert(f(tree_move(tree, "/a/", "/c/")) == EEXIST);
@@ -5150,7 +5146,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/b/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/a/c/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/c/a/b/")) == -1);
+	x[93] = f(tree_move(tree, "/b/", "/b/c/a/b/"));
 	assert(f(tree_move(tree, "/", "/a/c/")) == EBUSY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/", "/b/")) == 0);
@@ -5234,7 +5230,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/c/b/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/b/b/", "/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/a/a/")) == -1);
+	x[94] = f(tree_move(tree, "/b/", "/b/a/a/"));
 	assert(f(tree_remove(tree, "/a/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/b/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/a/")) == ENOENT);
@@ -5326,7 +5322,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/b/b/b/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/a/c/", "/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/")) == -1);
+	x[95] = f(tree_move(tree, "/b/", "/b/c/"));
 	assert(f(tree_move(tree, "/c/a/a/", "/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -5377,7 +5373,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/a/b/b/", "/b/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/c/", "/c/c/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/", "/a/a/")) == -1);
+	x[96] = f(tree_move(tree, "/a/", "/a/a/"));
 	assert(f(tree_move(tree, "/c/b/a/a/", "/a/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/c/b/", "/c/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/c/")) == ENOTEMPTY);
@@ -5435,7 +5431,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/", "/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/")) == -1);
+	x[97] = f(tree_move(tree, "/c/", "/c/b/b/"));
 	assert(f(tree_remove(tree, "/c/a/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/b/b/b/")) == ENOENT);
@@ -5451,7 +5447,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/a/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/a/")) == -1);
+	x[98] = f(tree_move(tree, "/c/", "/c/a/"));
 	assert(f(tree_remove(tree, "/b/b/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/a/c/", "/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/b/b/")) == ENOENT);
@@ -5492,7 +5488,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/c/")) == 0);
 	assert(f(tree_create(tree, "/b/a/b/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
-	assert(f(tree_move(tree, "/b/", "/b/a/b/b/")) == -1);
+	x[99] = f(tree_move(tree, "/b/", "/b/a/b/b/"));
 	assert(f(tree_create(tree, "/b/b/")) == 0);
 	assert(f(tree_create(tree, "/a/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/b/c/", "/c/a/b/b/")) == ENOENT);
@@ -5591,14 +5587,14 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/b/a/", "/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/a/b/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/c/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/c/", "/c/c/b/")) == -1);
+	x[100] = f(tree_move(tree, "/c/c/", "/c/c/b/"));
 	assert(f(tree_move(tree, "/c/b/a/b/", "/c/b/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/b/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/c/c/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/", "/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/a/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/b/")) == -1);
+	x[101] = f(tree_move(tree, "/c/", "/c/b/"));
 	assert(f(tree_create(tree, "/b/c/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/a/a/")) == 0);
@@ -5655,12 +5651,12 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/b/")) == -1);
+	x[102] = f(tree_move(tree, "/b/", "/b/c/b/b/"));
 	assert(f(tree_create(tree, "/a/c/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/b/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/a/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/", "/c/b/a/c/")) == -1);
+	x[103] = f(tree_move(tree, "/c/", "/c/b/a/c/"));
 	assert(f(tree_move(tree, "/c/b/a/", "/b/a/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/c/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/a/b/c/", "/b/")) == ENOENT);
@@ -5671,7 +5667,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/b/c/c/", "/a/a/b/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/b/b/c/", "/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/c/", "/c/a/c/c/")) == -1);
+	x[104] = f(tree_move(tree, "/c/", "/c/a/c/c/"));
 	assert(f(tree_remove(tree, "/b/c/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/b/a/", "/c/")) == ENOENT);
@@ -5704,7 +5700,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/b/b/c/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/")) == -1);
+	x[105] = f(tree_move(tree, "/c/", "/c/b/b/"));
 	assert(f(tree_remove(tree, "/a/a/b/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/b/c/c/")) == ENOENT);
@@ -5760,7 +5756,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/a/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/", "/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/c/", "/b/c/a/")) == -1);
+	x[106] = f(tree_move(tree, "/b/c/", "/b/c/a/"));
 	assert(f(tree_create(tree, "/c/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/c/", "/")) == EEXIST);
@@ -5887,7 +5883,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/c/b/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/", "/a/c/b/b/")) == -1);
+	x[107] = f(tree_move(tree, "/a/", "/a/c/b/b/"));
 	assert(f(tree_create(tree, "/b/b/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/c/")) == ENOTEMPTY);
@@ -5922,7 +5918,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/c/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/b/", "/b/c/a/c/")) == -1);
+	x[108] = f(tree_move(tree, "/b/", "/b/c/a/c/"));
 	assert(f(tree_create(tree, "/c/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/b/c/c/")) == ENOENT);
@@ -6301,7 +6297,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/c/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/a/a/a/")) == -1);
+	x[109] = f(tree_move(tree, "/c/", "/c/a/a/a/"));
 	assert(f(tree_remove(tree, "/c/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/a/a/")) == 0);
 	assert(f(tree_remove(tree, "/b/a/c/b/")) == ENOENT);
@@ -6393,7 +6389,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/a/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/c/", "/c/a/a/")) == -1);
+	x[110] = f(tree_move(tree, "/c/", "/c/a/a/"));
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/b/c/", "/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/c/a/")) == ENOENT);
@@ -6553,7 +6549,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/c/b/b/")) == EBUSY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/a/", "/c/a/a/a/")) == -1);
+	x[111] = f(tree_move(tree, "/c/a/", "/c/a/a/a/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/b/b/", "/c/b/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/", "/b/a/c/")) == 0);
@@ -6598,7 +6594,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/", "/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/b/b/")) == -1);
+	x[112] = f(tree_move(tree, "/b/", "/b/b/b/"));
 	assert(f(tree_remove(tree, "/c/b/b/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/b/c/")) == ENOENT);
@@ -6724,13 +6720,13 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/a/b/a/")) == 0);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/")) == -1);
+	x[113] = f(tree_move(tree, "/b/", "/b/c/b/"));
 	assert(f(tree_remove(tree, "/c/b/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/c/c/a/")) == -1);
+	x[114] = f(tree_move(tree, "/a/", "/a/c/c/a/"));
 	assert(f(tree_move(tree, "/b/c/b/", "/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/b/b/", "/c/b/b/c/")) == -1);
+	x[115] = f(tree_move(tree, "/c/b/b/", "/c/b/b/c/"));
 	assert(f(tree_create(tree, "/b/c/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/b/")) == 0);
@@ -6816,7 +6812,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/a/")) == -1);
+	x[116] = f(tree_move(tree, "/b/", "/b/c/b/a/"));
 	assert(f(tree_move(tree, "/c/b/b/", "/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/a/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/c/a/")) == EBUSY);
@@ -6852,7 +6848,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/c/a/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/c/")) == 0);
-	assert(f(tree_move(tree, "/c/", "/c/a/a/")) == -1);
+	x[117] = f(tree_move(tree, "/c/", "/c/a/a/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/", "/a/c/a/")) == 0);
@@ -6881,7 +6877,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/b/a/a/", "/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/b/", "/c/a/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/", "/a/a/")) == -1);
+	x[118] = f(tree_move(tree, "/a/", "/a/a/"));
 	assert(f(tree_move(tree, "/b/a/a/c/", "/a/c/a/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/c/", "/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
@@ -6951,7 +6947,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/c/c/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/", "/a/c/")) == -1);
+	x[119] = f(tree_move(tree, "/a/", "/a/c/"));
 	assert(f(tree_create(tree, "/c/b/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/c/b/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/b/a/c/a/")) == ENOENT);
@@ -7003,6 +6999,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/c/a/a/", "/c/b/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/b/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/a/c/")) == 0);
+    x[120] = -1;
 	assert(f(tree_create(tree, "/a/b/c/")) == 0);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/c/b/")) == 0);
@@ -7010,7 +7007,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/c/a/")) == -1);
+	x[121] = f(tree_move(tree, "/b/", "/b/c/a/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/a/", "/c/a/")) == ENOENT);
@@ -7029,7 +7026,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/a/")) == 0);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/c/b/")) == -1);
+	x[122] = f(tree_move(tree, "/a/c/", "/a/c/c/b/"));
 	assert(f(tree_create(tree, "/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/a/c/a/", "/b/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -7042,7 +7039,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/b/c/")) == 0);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/b/a/", "/b/b/a/c/")) == -1);
+	x[123] = f(tree_move(tree, "/b/b/a/", "/b/b/a/c/"));
 	assert(f(tree_remove(tree, "/a/a/")) == 0);
 	assert(f(tree_create(tree, "/c/")) == 0);
 	assert(f(tree_move(tree, "/a/b/", "/b/")) == EEXIST);
@@ -7072,14 +7069,14 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/c/")) == 0);
-	assert(f(tree_move(tree, "/b/c/", "/b/c/a/")) == -1);
+	x[124] = f(tree_move(tree, "/b/c/", "/b/c/a/"));
 	assert(f(tree_remove(tree, "/b/c/")) == 0);
 	assert(f(tree_move(tree, "/", "/b/a/c/c/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/a/c/c/", "/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/a/")) == 0);
-	assert(f(tree_move(tree, "/c/", "/c/c/")) == -1);
+	x[125] = f(tree_move(tree, "/c/", "/c/c/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/c/b/", "/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/b/a/")) == EEXIST);
@@ -7138,7 +7135,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/a/b/", "/b/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/", "/b/c/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/a/", "/a/a/a/")) == -1);
+	x[126] = f(tree_move(tree, "/a/a/", "/a/a/a/"));
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
@@ -7148,7 +7145,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/c/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/b/c/c/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/c/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/a/")) == -1);
+	x[127] = f(tree_move(tree, "/b/", "/b/c/a/"));
 	assert(f(tree_move(tree, "/", "/a/a/b/c/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/a/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
@@ -7203,8 +7200,8 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/b/a/a/")) == 0);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/")) == -1);
-	assert(f(tree_move(tree, "/a/", "/a/b/a/")) == -1);
+	x[128] = f(tree_move(tree, "/b/", "/b/c/"));
+	x[129] = f(tree_move(tree, "/a/", "/a/b/a/"));
 	assert(f(tree_move(tree, "/b/a/", "/a/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/c/", "/b/a/b/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
@@ -7227,7 +7224,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/b/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/b/c/")) == -1);
+	x[130] = f(tree_move(tree, "/c/", "/c/b/c/"));
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/c/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/c/a/")) == ENOENT);
@@ -7305,7 +7302,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_move(tree, "/c/c/", "/b/b/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+	x[131] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_remove(tree, "/a/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/c/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/", "/a/b/")) == 0);
@@ -7319,10 +7316,10 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/")) == 0);
 	assert(f(tree_create(tree, "/c/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/b/c/b/")) == -1);
+	x[132] = f(tree_move(tree, "/c/", "/c/b/c/b/"));
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/b/", "/c/b/c/")) == -1);
+	x[133] = f(tree_move(tree, "/c/b/", "/c/b/c/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/b/a/b/", "/a/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/a/c/")) == ENOENT);
@@ -7427,7 +7424,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/", "/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/b/")) == -1);
+	x[134] = f(tree_move(tree, "/c/", "/c/b/b/b/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/a/c/")) == 0);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
@@ -7460,7 +7457,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/c/a/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/c/a/b/", "/a/c/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/b/", "/a/b/b/")) == -1);
+	x[135] = f(tree_move(tree, "/a/b/", "/a/b/b/"));
 	assert(f(tree_remove(tree, "/c/c/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/c/a/", "/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/b/", "/")) == EEXIST);
@@ -7585,7 +7582,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/b/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/a/", "/b/a/a/b/")) == -1);
+	x[136] = f(tree_move(tree, "/b/a/", "/b/a/a/b/"));
 	assert(f(tree_move(tree, "/a/a/", "/c/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/c/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/a/c/")) == ENOENT);
@@ -7751,7 +7748,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/b/a/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/c/b/")) == -1);
+	x[137] = f(tree_move(tree, "/b/", "/b/b/c/b/"));
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -7792,7 +7789,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/b/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/", "/a/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/a/", "/a/a/c/")) == -1);
+	x[138] = f(tree_move(tree, "/a/a/", "/a/a/c/"));
 	assert(f(tree_remove(tree, "/a/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/a/b/")) == ENOENT);
@@ -8038,7 +8035,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/")) == 0);
-	assert(f(tree_move(tree, "/b/a/", "/b/a/b/")) == -1);
+	x[139] = f(tree_move(tree, "/b/a/", "/b/a/b/"));
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/a/a/a/", "/b/")) == ENOENT);
@@ -8184,7 +8181,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/b/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/a/")) == 0);
 	assert(f(tree_move(tree, "/b/c/a/", "/a/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/a/a/")) == -1);
+	x[140] = f(tree_move(tree, "/b/", "/b/a/a/"));
 	assert(f(tree_move(tree, "/", "/b/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/b/b/")) == 0);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
@@ -8200,7 +8197,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/a/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/a/c/", "/b/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/c/")) == -1);
+	x[141] = f(tree_move(tree, "/c/", "/c/b/b/c/"));
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/", "/a/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/c/c/c/b/")) == EBUSY);
@@ -8223,7 +8220,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/b/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/a/b/b/a/", "/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/", "/a/a/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/c/c/")) == -1);
+	x[142] = f(tree_move(tree, "/b/", "/b/b/c/c/"));
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/c/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
@@ -8275,7 +8272,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/", "/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/", "/b/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/b/a/")) == -1);
+	x[143] = f(tree_move(tree, "/a/", "/a/b/a/"));
 	assert(f(tree_create(tree, "/b/")) == 0);
 	assert(f(tree_move(tree, "/", "/b/c/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/")) == 0);
@@ -8445,7 +8442,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/a/c/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+	x[144] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_create(tree, "/c/a/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/c/a/")) == ENOENT);
@@ -8495,12 +8492,12 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/c/b/a/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/b/")) == -1);
+	x[145] = f(tree_move(tree, "/a/", "/a/b/"));
 	assert(f(tree_move(tree, "/", "/c/c/b/")) == EBUSY);
 	assert(f(tree_move(tree, "/b/b/", "/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/")) == 0);
 	assert(f(tree_remove(tree, "/b/a/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/c/", "/c/b/b/c/")) == -1);
+	x[146] = f(tree_move(tree, "/c/", "/c/b/b/c/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/")) == ENOENT);
@@ -8531,7 +8528,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/b/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/b/c/b/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/", "/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/c/", "/b/c/b/a/")) == -1);
+	x[147] = f(tree_move(tree, "/b/c/", "/b/c/b/a/"));
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/b/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/", "/")) == EEXIST);
@@ -8564,7 +8561,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/c/")) == 0);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/b/a/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/a/", "/c/a/b/c/")) == -1);
+	x[148] = f(tree_move(tree, "/c/a/", "/c/a/b/c/"));
 	assert(f(tree_move(tree, "/b/a/", "/c/b/b/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -8579,7 +8576,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/b/c/a/a/", "/a/b/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/c/c/a/", "/b/a/c/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/b/b/")) == EBUSY);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/")) == -1);
+	x[149] = f(tree_move(tree, "/b/", "/b/c/b/"));
 	assert(f(tree_remove(tree, "/b/c/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/b/a/b/c/")) == 0);
@@ -8629,7 +8626,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/a/c/")) == 0);
 	assert(f(tree_remove(tree, "/a/c/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/a/a/")) == -1);
+	x[150] = f(tree_move(tree, "/b/", "/b/a/a/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/c/a/b/", "/a/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/a/b/")) == EBUSY);
@@ -8744,7 +8741,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/", "/a/c/c/")) == -1);
+	x[151] = f(tree_move(tree, "/a/", "/a/c/c/"));
 	assert(f(tree_create(tree, "/a/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
@@ -8754,7 +8751,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/b/a/")) == -1);
+	x[152] = f(tree_move(tree, "/a/c/", "/a/c/b/a/"));
 	assert(f(tree_move(tree, "/c/c/b/", "/c/b/")) == 0);
 	assert(f(tree_create(tree, "/c/c/c/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/b/b/a/")) == ENOENT);
@@ -8833,14 +8830,14 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/")) == 0);
 	assert(f(tree_remove(tree, "/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/a/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/c/", "/c/c/a/")) == -1);
+	x[153] = f(tree_move(tree, "/c/c/", "/c/c/a/"));
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/a/a/a/", "/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/a/a/a/", "/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/a/")) == -1);
+	x[154] = f(tree_move(tree, "/c/", "/c/a/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/a/a/b/")) == ENOENT);
@@ -8851,7 +8848,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/")) == 0);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/b/a/", "/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/c/", "/c/c/c/")) == -1);
+	x[155] = f(tree_move(tree, "/c/c/", "/c/c/c/"));
 	assert(f(tree_create(tree, "/b/b/c/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/a/c/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -9080,7 +9077,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/a/", "/a/c/")) == -1);
+	x[156] = f(tree_move(tree, "/a/", "/a/c/"));
 	assert(f(tree_remove(tree, "/a/b/")) == 0);
 	assert(f(tree_move(tree, "/a/c/a/", "/b/c/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
@@ -9179,7 +9176,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/a/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/a/a/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/b/c/")) == -1);
+	x[157] = f(tree_move(tree, "/a/c/", "/a/c/b/c/"));
 	assert(f(tree_move(tree, "/c/c/b/", "/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/b/")) == 0);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -9226,7 +9223,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/c/c/b/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/c/", "/b/c/b/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/c/a/")) == -1);
+	x[158] = f(tree_move(tree, "/a/", "/a/c/a/"));
 	assert(f(tree_move(tree, "/", "/c/a/c/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/b/b/", "/a/")) == ENOENT);
@@ -9242,7 +9239,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/c/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/")) == -1);
+    x[159] = f(tree_move(tree, "/b/", "/b/b/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/b/b/a/")) == 0);
 	assert(f(tree_create(tree, "/b/a/a/")) == ENOENT);
@@ -9304,7 +9301,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/b/")) == 0);
 	assert(f(tree_move(tree, "/b/c/c/c/", "/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/", "/c/b/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/", "/c/a/")) == -1);
+	x[160] = f(tree_move(tree, "/c/", "/c/a/"));
 	assert(f(tree_move(tree, "/a/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/c/b/b/c/")) == 0);
@@ -9386,7 +9383,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/a/", "/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/c/b/c/")) == -1);
+	x[161] = f(tree_move(tree, "/c/", "/c/c/b/c/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -9411,7 +9408,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/c/")) == 0);
 	assert(f(tree_move(tree, "/b/a/b/", "/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/c/c/b/")) == -1);
+	x[162] = f(tree_move(tree, "/c/", "/c/c/c/b/"));
 	assert(f(tree_move(tree, "/c/", "/b/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/")) == ENOENT);
@@ -9445,17 +9442,17 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/c/a/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/", "/c/c/c/a/")) == -1);
+	x[163] = f(tree_move(tree, "/c/", "/c/c/c/a/"));
 	assert(f(tree_create(tree, "/b/")) == 0);
 	assert(f(tree_move(tree, "/b/a/c/a/", "/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/b/c/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/b/a/")) == -1);
+	x[164] = f(tree_move(tree, "/a/", "/a/b/a/"));
 	assert(f(tree_create(tree, "/b/a/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/a/c/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/c/c/")) == -1);
+	x[165] = f(tree_move(tree, "/a/", "/a/c/c/"));
 	assert(f(tree_remove(tree, "/a/c/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
@@ -9466,7 +9463,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/a/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/c/b/")) == -1);
+	x[166] = f(tree_move(tree, "/b/", "/b/c/b/"));
 	assert(f(tree_move(tree, "/", "/a/a/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/c/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/c/")) == EEXIST);
@@ -9486,7 +9483,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/b/", "/b/b/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/a/a/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/b/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/a/")) == -1);
+	x[167] = f(tree_move(tree, "/a/c/", "/a/c/a/"));
 	assert(f(tree_move(tree, "/c/b/c/a/", "/a/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/b/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/a/c/")) == ENOENT);
@@ -9512,7 +9509,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/c/")) == 0);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/b/b/")) == -1);
+	x[168] = f(tree_move(tree, "/b/", "/b/b/b/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_create(tree, "/")) == EEXIST);
@@ -9529,8 +9526,8 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/b/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/a/a/a/c/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/c/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/a/b/", "/a/a/b/a/")) == -1);
-	assert(f(tree_move(tree, "/c/", "/c/c/c/")) == -1);
+	x[169] = f(tree_move(tree, "/a/a/b/", "/a/a/b/a/"));
+	x[170] = f(tree_move(tree, "/c/", "/c/c/c/"));
 	assert(f(tree_move(tree, "/a/c/b/a/", "/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/a/a/b/")) == 0);
 	assert(f(tree_remove(tree, "/b/c/b/")) == ENOENT);
@@ -9561,7 +9558,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/a/a/b/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/b/a/c/", "/c/c/b/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/b/", "/a/b/c/")) == -1);
+	x[171] = f(tree_move(tree, "/a/b/", "/a/b/c/"));
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_move(tree, "/c/a/c/c/", "/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/b/a/a/")) == ENOENT);
@@ -9673,7 +9670,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/b/", "/b/a/b/b/")) == -1);
+	x[172] = f(tree_move(tree, "/b/", "/b/a/b/b/"));
 	assert(f(tree_move(tree, "/a/b/c/", "/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/a/a/c/")) == 0);
@@ -9705,7 +9702,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/b/b/", "/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/b/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/b/", "/c/b/b/c/")) == -1);
+	x[173] = f(tree_move(tree, "/c/b/", "/c/b/b/c/"));
 	assert(f(tree_remove(tree, "/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/c/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/")) == ENOENT);
@@ -9719,7 +9716,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/c/a/a/c/", "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/a/a/", "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
-	assert(f(tree_move(tree, "/c/b/", "/c/b/c/")) == -1);
+	x[174] = f(tree_move(tree, "/c/b/", "/c/b/c/"));
 	assert(f(tree_create(tree, "/a/c/b/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/")) == ENOENT);
@@ -9732,7 +9729,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/a/c/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/c/a/")) == -1);
+	x[175] = f(tree_move(tree, "/c/", "/c/c/a/"));
 	assert(f(tree_remove(tree, "/b/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/", "/a/a/c/a/")) == EBUSY);
 	assert(f(tree_move(tree, "/c/b/b/b/", "/b/c/")) == ENOENT);
@@ -9793,7 +9790,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/b/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/b/", "/c/c/b/a/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/b/c/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/c/")) == -1);
+	x[176] = f(tree_move(tree, "/b/", "/b/c/c/"));
 	assert(f(tree_move(tree, "/", "/a/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/a/b/")) == ENOENT);
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
@@ -9812,7 +9809,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/c/c/")) == EEXIST);
-	assert(f(tree_move(tree, "/c/a/", "/c/a/a/")) == -1);
+	x[177] = f(tree_move(tree, "/c/a/", "/c/a/a/"));
 	assert(f(tree_create(tree, "/a/")) == EEXIST);
 	assert(f(tree_move(tree, "/c/b/a/", "/b/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/b/")) == 0);
@@ -9836,14 +9833,14 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/a/a/a/")) == ENOENT);
 	assert(f(tree_move(tree, "/c/b/a/a/", "/a/c/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/b/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/a/c/", "/a/c/c/")) == -1);
+	x[178] = f(tree_move(tree, "/a/c/", "/a/c/c/"));
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/c/a/")) == ENOTEMPTY);
 	assert(f(tree_remove(tree, "/a/b/a/c/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/c/", "/a/b/b/a/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/c/a/")) == ENOENT);
-	assert(f(tree_move(tree, "/c/", "/c/b/")) == -1);
+	x[179] = f(tree_move(tree, "/c/", "/c/b/"));
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/b/")) == 0);
 	assert(f(tree_move(tree, "/b/c/", "/a/c/a/c/")) == ENOENT);
@@ -9893,7 +9890,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/c/c/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/c/")) == EEXIST);
 	assert(f(tree_remove(tree, "/b/b/c/b/")) == ENOENT);
-	assert(f(tree_move(tree, "/b/", "/b/c/")) == -1);
+	x[180] = f(tree_move(tree, "/b/", "/b/c/"));
 	assert(f(tree_create(tree, "/b/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/c/a/")) == 0);
 	assert(f(tree_create(tree, "/c/b/a/b/")) == 0);
@@ -9912,7 +9909,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/a/")) == 0);
 	assert(f(tree_create(tree, "/a/c/c/")) == 0);
 	assert(f(tree_create(tree, "/a/b/b/")) == 0);
-	assert(f(tree_move(tree, "/a/", "/a/b/b/c/")) == -1);
+	x[181] = f(tree_move(tree, "/a/", "/a/b/b/c/"));
 	assert(f(tree_create(tree, "/a/b/a/b/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_create(tree, "/b/c/b/")) == 0);
@@ -9940,7 +9937,7 @@ void sequential_big_random() {
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_move(tree, "/", "/")) == EBUSY);
 	assert(f(tree_remove(tree, "/c/c/")) == ENOTEMPTY);
-	assert(f(tree_move(tree, "/a/b/", "/a/b/b/")) == -1);
+	x[182] = f(tree_move(tree, "/a/b/", "/a/b/b/"));
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_remove(tree, "/a/b/c/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/a/b/")) == 0);

@@ -1,4 +1,8 @@
 #include "path.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+
 #define SEPARATOR '/'
 
 size_t get_path_depth(const char *path) {
@@ -67,6 +71,5 @@ void get_nth_dir_name_and_length(const char *path, const size_t n, size_t *index
 }
 
 bool is_ancestor(const char *path1, const char *path2) {
-    size_t length1 = strlen(path1);
-    return strncmp(path1, path2, length1) == 0;
+    return strncmp(path1, path2, strlen(path1)) == 0;
 }

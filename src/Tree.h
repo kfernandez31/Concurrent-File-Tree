@@ -1,14 +1,5 @@
 #pragma once
 
-#include <errno.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <assert.h>
-#include <stdio.h>
-#include <pthread.h>
-#include "HashMap.h"
-#include "err.h"
-
 /* Let "Tree" mean the same as "struct Tree". */
 typedef struct Tree Tree;
 
@@ -55,5 +46,3 @@ int tree_remove(Tree* tree, const char* path);
   * @return : error code / success
   */
 int tree_move(Tree *tree, const char *source, const char *target);
-
-Tree *get_node(Tree *tree, const bool pop, const char *path, const size_t depth); //TODO: WYWAL STĄD

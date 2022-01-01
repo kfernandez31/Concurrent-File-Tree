@@ -13,4 +13,5 @@ extern void fatal(const char* fmt, ...);
  * @param res : function call result
  * @param caller : calling function name
  */
-void err_check(int res, const char *caller);
+/*void err_check(int res, const char *caller);*/
+//TODO: wywal

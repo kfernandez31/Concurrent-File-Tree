@@ -15,6 +15,7 @@ void syserr(const char* fmt, ...) {
     va_start(fmt_args, fmt);
     vfprintf(stderr, fmt, fmt_args);
     va_end(fmt_args);
+
     fprintf(stderr, " (%d; %s)\n", errno, strerror(errno));
     exit(1);
 }
@@ -32,8 +33,9 @@ void fatal(const char* fmt, ...) {
     exit(1);
 }
 
+/*
 void err_check(int res, const char *caller) {
     if (res != SUCCESS) {
         syserr("ERROR %d in call of %s\n", caller);
     }
-}
+}*/

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <stdlib.h>
-#include <stdio.h>
+
+
 #include <stdbool.h>
 #include <string.h>
-#include <ctype.h>
 
 #define MAX_DIR_NAME_LENGTH 255
 #define MAX_PATH_LENGTH 4095
