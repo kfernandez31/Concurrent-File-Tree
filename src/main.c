@@ -1,34 +1,20 @@
 #include "Tree.h"
+#include "mtwister.h"
 #include <stdarg.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
 
-typedef void (TEST) (size_t);
-typedef void (runnable) (void*);
-
-/* ------------------------------ Parametrized macros ------------------------------ */
-
-#define PRINT_AND_FREE(s, n)  \
-do {                    \
-    if (str == NULL) { \
-        printf("NULL [%d]\n", n);\
-    } \
-    else {\
-        printf("%s [%d]\n", str, n);\
-        free(str);        \
-        str = NULL;\
-    }\
-} while (0)
-
+#define TEST_DIR_COUNT 3
 #define COUNT_OF(arr) ((sizeof(arr)/sizeof(arr[0])) / ((size_t)(!(sizeof(arr) % sizeof(arr[0])))))
 
-/* ------------------------------ Constants ------------------------------ */
-#define NUM_TREE_LIST   1
-#define NUM_TREE_CREATE 1
-#define NUM_TREE_REMOVE 1
-#define NUM_TREE_MOVE   1
-#define NUM_ALL         NUM_TREE_LIST + NUM_TREE_CREATE + NUM_TREE_REMOVE + NUM_TREE_MOVE
+typedef void (TEST) (size_t);
+typedef void* (runnable) (void*);
 
 typedef enum operation {
-    LIST,
+    LIST = 0,
     CREATE,
     REMOVE,
     MOVE,
@@ -36,37 +22,37 @@ typedef enum operation {
     NUM_OPERATIONS
 } operation;
 
-/* ------------------------------ Global variables ------------------------------ */
+static void* runnable_list(void* ignored);
+static void* runnable_create(void* ignored);
+static void* runnable_remove(void* ignored);
+static void* runnable_move(void* ignored);
+
+runnable* operations[NUM_OPERATIONS] = {runnable_list, runnable_create, runnable_remove, runnable_move};
 const char *dir_names[] = {"/a/", "/b/", "/c/", "/d/", "/e/", "/f/",
                            "/g/", "/h/", "/i/", "/j/", "/k/", "/l/",
                            "/m/", "/n/", "/o/", "/p/", "/q/", "/r/",
                            "/s/", "/t/", "/u/", "/v/", "/w/", "/x/", "/y/", "/z/"};
 const char *example_paths[] = {"/a/", "/b/", "/a/b/", "/b/a/", "/b/a/d/", "/a/b/c/", "/a/b/d/"};
-size_t i_create, i_remove;
-size_t i_create, i_src, i_dest;
 Tree *tree = NULL;
-pthread_mutex_t mutexes[NUM_OPERATIONS];
+pthread_mutex_t mutex;
+MTRand r;
 
 /* ------------------------------ Helper functions ------------------------------ */
-static void init_mutexes() {
-    for (size_t i = 0; i < NUM_OPERATIONS; i++) {
-        pthread_mutexattr_t mutex_attr;
-        err_check(pthread_mutexattr_init(&mutex_attr), "pthread_mutexattr_init");
-        err_check(pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_ERRORCHECK), "pthread_mutexattr_settype");
-        err_check(pthread_mutex_init(&mutexes[i], &mutex_attr), "pthread_mutex_init");
-    }
+static void init_mutex(pthread_mutex_t *mtx) {
+    pthread_mutexattr_t mutex_attr;
+    assert(pthread_mutexattr_init(&mutex_attr) == 0);
+    assert(pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_ERRORCHECK) == 0);
+    assert(pthread_mutex_init(mtx, &mutex_attr) == 0);
 }
 
-static void destroy_mutexes() {
-    for (size_t i = 0; i < NUM_OPERATIONS; i++) {
-        err_check(pthread_mutex_destroy(&mutexes[i]), "pthread_mutex_destroy");
-    }
+static void destroy_mutex(pthread_mutex_t *mtx) {
+    assert(pthread_mutex_destroy(mtx) == 0);
 }
 
 static void log_with_thread_name(const char *fmt, ...) {
     pthread_t tid = pthread_self();
 
-    err_check(pthread_mutex_lock(&mutexes[LIST]), "pthread_mutex_lock");
+    assert(pthread_mutex_lock(&mutex) == 0);
 
     printf("[THREAD %ld] ", tid);
     va_list fmt_args;
@@ -75,7 +61,7 @@ static void log_with_thread_name(const char *fmt, ...) {
     va_end(fmt_args);
     printf("\n");
 
-    err_check(pthread_mutex_unlock(&mutexes[LIST]), "pthread_mutex_unlock");
+    assert(pthread_mutex_unlock(&mutex) == 0);
 }
 
 static inline void init_example_tree() {
@@ -86,25 +72,24 @@ static inline void init_example_tree() {
 }
 
 /* ------------------------------ Runnables ------------------------------ */
-static void* runnable_list(void* data) {
-    static char PATH[] = "/";
-    char *str = tree_list(tree, PATH);
+static void* runnable_list(void* ignored) {
+    size_t i = genRandLong(&r) % 2;
+
+    char *str = tree_list(tree, dir_names[i]);
+
     if (str == NULL) {
-        log_with_thread_name("Listing tree: NULL");
+        log_with_thread_name("Unable to list node: %s", dir_names[i]);
     }
     else {
-        log_with_thread_name("Listing tree: %s", str);
+        log_with_thread_name("Listing node: %s", dir_names[i], str);
         free(str);
     }
+
     return 0;
 }
 
-static void* runnable_create(void* data) {
-    size_t i;
-    err_check(pthread_mutex_lock(&mutexes[CREATE]), "pthread_mutex_lock");
-    i = i_create;
-    if (++i_create >= COUNT_OF(dir_names)) i = 0;
-    err_check(pthread_mutex_unlock(&mutexes[CREATE]), "pthread_mutex_unlock");
+static void* runnable_create(void* ignored) {
+    size_t i = genRandLong(&r) % TEST_DIR_COUNT;
 
     if (tree_create(tree, dir_names[i]) == 0) {
         log_with_thread_name("Successfully created directory: %s", dir_names[i]);
@@ -116,12 +101,8 @@ static void* runnable_create(void* data) {
     return 0;
 }
 
-static void* runnable_remove(void* data) {
-    size_t i;
-    err_check(pthread_mutex_lock(&mutexes[REMOVE]), "pthread_mutex_lock");
-    i = i_remove;
-    if (++i_remove >= COUNT_OF(dir_names)) i = 0;
-    err_check(pthread_mutex_unlock(&mutexes[REMOVE]), "pthread_mutex_unlock");
+static void* runnable_remove(void* ignored) {
+    size_t i = genRandLong(&r) % TEST_DIR_COUNT;
 
     if (tree_remove(tree, dir_names[i]) == 0) {
         log_with_thread_name("Successfully removed directory: %s", dir_names[i]);
@@ -133,103 +114,42 @@ static void* runnable_remove(void* data) {
     return 0;
 }
 
-static void* runnable_move(void* data) {
-    //TODO: może kolejka nazw?
+static void* runnable_move(void* ignored) {
+    //TODO
     return 0;
 }
 
-
-/* ------------------------------ Concurrent tests------------------------------ */
-void TEMPLATE_many_1_type(void* (rtype) (void*), const size_t num_threads) {
-    pthread_t th[num_threads];
+void TEST_all_operations(size_t num_threads[4]) {
+    size_t num_all = num_threads[LIST] + num_threads[CREATE] + num_threads[REMOVE] + num_threads[MOVE];
+    pthread_t th[num_all];
     pthread_attr_t attr;
-
-    err_check(pthread_attr_init(&attr), "pthread_attr_init");
-    err_check(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE), "pthread_attr_setdetachstate");
+    tree = tree_new();
+    assert(pthread_attr_init(&attr) == 0);
+    assert(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE) == 0);
 
     /* Create runnables and start threads */
-    for (size_t i = 0; i < num_threads; i++) {
-        err_check(pthread_create(&th[i], &attr, rtype, 0), "pthread_create");
-    }
-
-    /* Wait until threads finish */
-    for (size_t i = 0; i < num_threads; i++) {
-        void* retval = NULL;
-        err_check(pthread_join(th[i], &retval), "pthread_join");
-    }
-
-    err_check(pthread_attr_destroy(&attr), "pthread_attr_destroy");
-
-    /* Tree destruction */
-    tree_free(tree);
-}
-
-void TEMPLATE_many_2_types(void* (rtype1) (void*), void* (rtype2) (void*), const size_t num_threads) {
-    pthread_t th[num_threads];
-    pthread_attr_t attr;
-
-    err_check(pthread_attr_init(&attr), "pthread_attr_init");
-    err_check(pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_JOINABLE), "pthread_attr_setdetachstate");
-
-    /* Create runnables and start threads */
-    for (size_t i = 0; i < num_threads; i++) {
-        if (i % 2 == 0) {
-            /* Create writer */
-            err_check(pthread_create(&th[i], &attr, rtype1, 0), "pthread_create");
-        }
-        else {
-            /* Create reader */
-            err_check(pthread_create(&th[i], &attr, rtype2, 0), "pthread_create");
+    size_t size_used = 0;
+    for (size_t i = 0; size_used < num_all; i++) {
+        size_t op = i % NUM_OPERATIONS;
+        if (num_threads[op] > 0) {
+            assert(pthread_create(&th[size_used], &attr, operations[op], 0) == 0);
+            num_threads[op]--;
+            size_used++;
         }
     }
 
     /* Wait until threads finish */
-    for (size_t i = 0; i < num_threads; i++) {
-        void* retval = NULL;
-        err_check(pthread_join(th[i], &retval), "pthread_join");
+    void* retval;
+    for (size_t i = 0; i < num_all; i++) {
+        assert(pthread_join(th[i], &retval) == 0);
+        //assert(retval == NULL);
     }
 
-    err_check(pthread_attr_destroy(&attr), "pthread_attr_destroy");
-
-    /* Tree destruction */
+    assert(pthread_attr_destroy(&attr) == 0);
     tree_free(tree);
-}
-
-void TEST_many_list(const size_t num_threads) {
-    init_example_tree();
-    return TEMPLATE_many_1_type(runnable_list, num_threads);
-}
-
-void TEST_many_create(const size_t num_threads) {
-    tree = tree_new();
-    return TEMPLATE_many_1_type(runnable_create, num_threads);
-}
-
-void TEST_many_create_many_list(const size_t num_threads) {
-    //TODO:
-    //Assertion `tree->w_count == 0' failed.
-    //ok: ccll, clcl, llcc, lclc, lccl
-    //nie-ok: ccl(sigsegv), cl(sigsegv)
-    tree = tree_new();
-    return TEMPLATE_many_2_types(runnable_create, runnable_list, num_threads);
-}
-
-void TEST_many_create_many_remove(const size_t num_threads) {
-    tree = tree_new();
-    assert(num_threads % 2 == 0);
-    return TEMPLATE_many_2_types(runnable_create, runnable_remove, num_threads);
 }
 
 /* ------------------------------ Sequential tests------------------------------ */
-void TEST_edge_cases() {
-    Tree *t = tree_new();
-
-    assert(tree_create(t, "zlanazwa") != 0);
-    assert(tree_move(t, "/a/", "/a/b/d/x/") != 0);
-
-    tree_free(t);
-}
-
 //TODO: templatka z varargs co tworzy drzewko z listy dirsów
 void TEST_tree_move_example() {
     Tree *t = tree_new();
@@ -245,81 +165,83 @@ void TEST_tree_move_example() {
 
     str = tree_list(t, "/a/");
     assert(strcmp(str, "b") == 0);
-    PRINT_AND_FREE(str, 1);
+    free(str);
 
     str = tree_list(t, "/a/b/");
     assert(strcmp(str, "c,d") == 0);
-    PRINT_AND_FREE(str, 2);
+    free(str);
 
     str = tree_list(t, "/a/b/c/");
-    assert(str == NULL);
-    PRINT_AND_FREE(str, 3);
+    assert(strcmp(str, "") == 0);
+    free(str);
 
     str = tree_list(t, "/a/b/d/");
-    assert(str == NULL);
-    PRINT_AND_FREE(str, 4);
+    assert(strcmp(str, "") == 0);
+    free(str);
 
     str = tree_list(t, "/b/");
     assert((strcmp(str, "a") == 0));
-    PRINT_AND_FREE(str, 5);
+    free(str);
 
     str = tree_list(t, "/b/a/");
     assert(strcmp(str, "d") == 0);
-    PRINT_AND_FREE(str, 6);
+    free(str);
 
     str = tree_list(t, "/b/a/d/");
-    assert(str == NULL);
-    PRINT_AND_FREE(str, 7);
+    assert(strcmp(str, "") == 0);
+    free(str);
 
     assert(!tree_move(t, "/a/b/", "/b/x/"));
 
     str = tree_list(t, "/a/");
-    assert(str == NULL);
-    PRINT_AND_FREE(str, 8);
+    assert(strcmp(str, "") == 0);
+    free(str);
 
     str = tree_list(t, "/b/");
     assert(strcmp(str, "x,a") == 0);
-    PRINT_AND_FREE(str, 9);
+    free(str);
 
     str = tree_list(t, "/b/a/");
     assert(strcmp(str, "d") == 0);
-    PRINT_AND_FREE(str, 10);
+    free(str);
 
     str = tree_list(t, "/b/a/d/");
-    assert(str == NULL);
-    PRINT_AND_FREE(str, 11);
+    assert(strcmp(str, "") == 0);
+    free(str);
 
     str = tree_list(t, "/b/x/");
     assert(strcmp(str, "c,d") == 0);
-    PRINT_AND_FREE(str, 12);
+    free(str);
 
     str = tree_list(t, "/b/x/c/");
-    assert(str == NULL);
-    PRINT_AND_FREE(str, 13);
+    assert(strcmp(str, "") == 0);
+    free(str);
 
     str = tree_list(t, "/b/x/d/");
-    assert(str == NULL);
-    PRINT_AND_FREE(str, 14);
+    assert(strcmp(str, "") == 0);
+    free(str);
 
     tree_free(t);
 }
 
-/*static void print_leaves(const Tree *tree) {
-
-}*/
-
 int main(void) {
-    init_mutexes();
+    init_mutex(&mutex);
+
+    srand(time(NULL));
+    r = seedRand(rand());
+
     /* Sequential tests */
-//    TEST_edge_cases();
-//     TEST_tree_move_example();
+    TEST_tree_move_example();
 
     /* Concurrent tests */
-//     TEST_many_list(100);
-//     TEST_many_create(7);
-//     TEST_many_create_many_list(4);
-//     TEST_many_create_many_remove(88);
+    size_t num_threads[NUM_OPERATIONS];
 
-    destroy_mutexes();
+    num_threads[LIST] = 21;
+    num_threads[CREATE] = 21;
+    num_threads[REMOVE] = 0;
+    num_threads[MOVE] = 0;
+    TEST_all_operations(num_threads);
+
+    destroy_mutex(&mutex);
     return 0;
 }

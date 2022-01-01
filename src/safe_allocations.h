@@ -5,7 +5,7 @@
 #ifndef CHECK_POINTER
 #define CHECK_POINTER(ptr)  \
 do {                    \
-    if (ptr == NULL) {  \
+    if ((ptr) == NULL) {  \
         exit(22); /* ENOMEM */       \
     }                   \
 } while (0)

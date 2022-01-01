@@ -67,7 +67,7 @@ void hmap_free(HashMap* map) {
         free(map);
     }
 }
-//TODO: size/length naming
+
 void *hmap_get(HashMap *map, const bool pop, const char *key, const size_t size) {
     unsigned h = get_hash(key, size);
     Pair* p = hmap_find(map, h, key, size);

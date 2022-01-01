@@ -21,6 +21,7 @@ set(SOURCE_FILES
         src/HashMap.c src/HashMap.h
         src/path.c src/path.h
         src/Tree.c src/Tree.h
+        src/mtwister.c src/mtwister.h
         src/safe_allocations.h
         )
 

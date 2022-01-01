@@ -16,7 +16,8 @@ int main() {
 //	sequential_small();
 //    valid_path();
 //    sequential_big_random();
-//	deadlock();
-//	concurrent_same_as_some_sequential();
-	liveness();
+//    concurrent_same_as_some_sequential();
+
+	deadlock();
+//	liveness();
 }
