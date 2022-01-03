@@ -41,8 +41,8 @@ int tree_remove(Tree* tree, const char* path);
  /**
   * Moves the folder specified in `source` to the specified `target`.
   * @param tree : file tree
-  * @param source : source directory
-  * @param target : target directory
+  * @param source_path : source directory
+  * @param target_path : target directory
   * @return : error code / success
   */
-int tree_move(Tree *tree, const char *source, const char *target);
+int tree_move(Tree *tree, const char *source_path, const char *target_path);

@@ -32,10 +32,3 @@ void fatal(const char* fmt, ...) {
     fprintf(stderr, "\n");
     exit(1);
 }
-
-/*
-void err_check(int res, const char *caller) {
-    if (res != SUCCESS) {
-        syserr("ERROR %d in call of %s\n", caller);
-    }
-}*/

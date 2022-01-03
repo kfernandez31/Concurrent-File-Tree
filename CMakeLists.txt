@@ -19,7 +19,7 @@ set(SOURCE_FILES
         src/main.c
         src/err.c src/err.h
         src/HashMap.c src/HashMap.h
-        src/path.c src/path.h
+        src/path_utils.c src/path_utils.h
         src/Tree.c src/Tree.h
         src/mtwister.c src/mtwister.h
         src/safe_allocations.h
@@ -48,7 +48,7 @@ set(TEST_SOURCE_FILES
         ${TESTS_PATH}valid_path.h
         src/err.c src/err.h
         src/HashMap.c src/HashMap.h
-        src/path.c src/path.h
+        src/path_utils.c src/path_utils.h
         src/Tree.c src/Tree.h
         src/safe_allocations.h
         )
