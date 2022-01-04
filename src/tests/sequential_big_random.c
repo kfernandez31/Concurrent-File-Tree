@@ -369,7 +369,7 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/b/b/a/")) == 0);
 	assert(f(tree_remove(tree, "/")) == EBUSY);
 	assert(f(tree_create(tree, "/b/b/a/c/")) == 0);
-	assert(f(tree_move(tree, "/b/a/", "/a/")) == 0);
+	assert(f(tree_move(tree, "/b/a/", "/a/")) == 0); //TODO: debug
 	assert(f(tree_remove(tree, "/c/")) == ENOTEMPTY);
 	assert(f(tree_create(tree, "/a/b/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/b/c/a/c/")) == ENOENT);

@@ -108,7 +108,7 @@ void get_nth_dir_name_and_length(const char *path, const size_t n, size_t *index
 }
 
 bool is_ancestor(const char *path1, const char *path2) {
-    return strncmp(path1, path2, strlen(path1)) == 0;
+    return (strncmp(path1, path2, strlen(path1)) == 0) && (strcmp(path1, path2) != 0);
 }
 
 // A wrapper for using strcmp in qsort.
