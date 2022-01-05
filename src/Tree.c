@@ -19,7 +19,7 @@ do {                                                                  \
     assert(pthread_mutex_lock(&(node)->var_protection) == SUCCESS);   \
     code_block                                                        \
     assert(pthread_mutex_unlock(&(node)->var_protection) == SUCCESS); \
-} while(0)
+} while(0);
 
 struct Tree {
     Tree *parent;                            /** Parent directory. NULL for the root **/
@@ -154,7 +154,8 @@ static void unwind_path(Tree *node) {
     while (node != NULL){
         UNDER_MUTEX(node,
                 next = node->parent;
-                node->refcount--;);
+                node->refcount--;
+        );
         node = next;
     }
 }
@@ -165,27 +166,33 @@ static void unwind_path(Tree *node) {
  * @param path : file path
  * @return : pointer to the requested directory
  */
-static Tree* get_node(Tree* tree, const char* path) {
+static Tree* get_node(Tree* tree, const char* path, const bool reader) {
     char child_name[MAX_FOLDER_NAME_LENGTH + 1];
 
-    reader_lock(tree);
-    UNDER_MUTEX(tree, tree->refcount++;);
+    if (IS_ROOT(path) && !reader)
+        writer_lock(tree);
+    else
+        reader_lock(tree);
 
+    UNDER_MUTEX(tree, tree->refcount++;);
     while ((path = split_path(path, child_name))) {
         Tree* subtree = hmap_get(tree->subdirectories, child_name);
         if (!subtree) {
-            reader_unlock(tree);
             unwind_path(tree);
+            reader_unlock(tree);
             return NULL;
         }
-        reader_lock(subtree);
+        if (IS_ROOT(path) && !reader)
+            writer_lock(subtree);
+        else
+            reader_lock(subtree);
+
         UNDER_MUTEX(subtree, subtree->refcount++;);
 
         reader_unlock(tree);
         tree = subtree;
     }
 
-    reader_unlock(tree);
     return tree;
 }
 
@@ -234,21 +241,20 @@ void tree_free(Tree* tree) {
     tree = NULL;
 }
 
-char *tree_list(Tree* tree, const char* path) {
+char* tree_list(Tree* tree, const char* path) {
     if (!is_valid_path(path))
         return NULL;
 
     char* result = NULL;
-    Tree* dir = get_node(tree, path);
+    Tree* dir = get_node(tree, path, true);
     if (!dir) {
         return NULL; // The directory doesn't exist
     }
 
-    reader_lock(dir);
     result = make_map_contents_string(dir->subdirectories); // The read
 
-    reader_unlock(dir);
     unwind_path(dir);
+    reader_unlock(dir);
     return result;
 }
 
@@ -261,15 +267,14 @@ int tree_create(Tree* tree, const char* path) {
     char child_name[MAX_FOLDER_NAME_LENGTH + 1] = {0}, parent_path[MAX_PATH_LENGTH + 1] = {0};
     make_path_to_parent(path, child_name, parent_path);
 
-    Tree* parent = get_node(tree, parent_path);
+    Tree* parent = get_node(tree, parent_path, false);
     if (!parent) {
         return ENOENT; // The directory's parent doesn't exist
     }
 
-    writer_lock(parent);
     if (hmap_get(parent->subdirectories, child_name)) {
-        writer_unlock(parent);
         unwind_path(parent);
+        writer_unlock(parent);
         return EEXIST; // The directory already exists
     }
 
@@ -277,8 +282,8 @@ int tree_create(Tree* tree, const char* path) {
     child->parent = parent;
     hmap_insert(parent->subdirectories, child_name, child); // The insertion
 
-    writer_unlock(parent);
     unwind_path(parent);
+    writer_unlock(parent);
     return SUCCESS;
 }
 
@@ -289,30 +294,32 @@ int tree_remove(Tree* tree, const char* path) {
     char child_name[MAX_FOLDER_NAME_LENGTH + 1] = {0}, parent_path[MAX_PATH_LENGTH + 1] = {0};
     make_path_to_parent(path, child_name, parent_path);
 
-    Tree* parent = get_node(tree, parent_path);
+    Tree* parent = get_node(tree, parent_path, false);
     if (!parent) {
-        return ENOENT; //The directory's parent doesn't exist
+        return ENOENT; // The directory's parent doesn't exist
     }
 
-    writer_lock(parent);
     Tree* child = hmap_get(parent->subdirectories, child_name);
     if (!child) {
-        writer_unlock(parent);
         unwind_path(parent);
+        writer_unlock(parent);
         return ENOENT; // The directory doesn't exist
     }
+    writer_lock(child);
 
     if (subdir_count(child) > 0) {
-        writer_unlock(parent);
+        writer_unlock(child);
         unwind_path(parent);
+        writer_unlock(parent);
         return ENOTEMPTY; // The directory is not empty
     }
 
     // The removal
     pop_subdir(parent, child_name);
-    writer_unlock(parent);
-    unwind_path(parent);
 
+    writer_unlock(child);
+    unwind_path(parent);
+    writer_unlock(parent);
     tree_free(child);
     return SUCCESS;
 }
@@ -338,71 +345,89 @@ int tree_move(Tree* tree, const char* s_path, const char* t_path) {
         //TODO:
     }
 
-    if (!(s_parent = get_node(tree, s_parent_path))) {
+    if (!(s_parent = get_node(tree, s_parent_path, false))) {
         return ENOENT; // The source's parent doesn't exist
     }
 
-    reader_lock(s_parent);
     if (!(s_dir = hmap_get(s_parent->subdirectories, s_name))) {
-        reader_unlock(s_parent);
         unwind_path(s_parent);
+        reader_unlock(s_parent);
         return ENOENT; //The source doesn't exist
     }
-
     subtree_lock(s_dir);
     reader_unlock(s_parent);
 
-    if (strcmp(s_parent_path, t_parent_path) == 0) {
-        t_parent = s_parent;
-    }
-    else if (!(t_parent = get_node(tree, t_parent_path))) {
-        subtree_unlock(s_dir);
-        return ENOENT; // The source's parent doesn't exist
-    }
-    if (s_parent != t_parent) writer_lock(t_parent);
+    if (strcmp(s_parent_path, t_parent_path) != 0) {
+        if (!(t_parent = get_node(tree, t_parent_path, false))) {
+            unwind_path(s_parent);
+            subtree_unlock(s_dir);
+            return ENOENT; // The source's parent doesn't exist
+        }
 
-    if (hmap_get(t_parent->subdirectories, t_name)) {
-        if (strcmp(s_path, t_path) == 0) {
-            subtree_unlock(s_dir);
-            unwind_path(s_parent);
-            if (s_parent != t_parent) {
-                writer_unlock(t_parent);
+        // Check if target already exists
+        if (hmap_get(t_parent->subdirectories, t_name)) {
+            if (strcmp(s_path, t_path) == 0) {
+                unwind_path(s_parent);
+                subtree_unlock(s_dir);
                 unwind_path(t_parent);
-            }
-            return SUCCESS; // The source and target are the same - nothing to move
-        }
-        if (is_ancestor(s_path, t_path)) {
-            subtree_unlock(s_dir);
-            unwind_path(s_parent);
-            if (s_parent != t_parent) {
                 writer_unlock(t_parent);
-                unwind_path(t_parent);
+                return SUCCESS; // The source and target are the same - nothing to move
             }
-            return EANCMOVE; // No directory can be moved to its descendant
-        }
-        subtree_unlock(s_dir);
-        unwind_path(s_parent);
-        if (s_parent != t_parent) {
-            writer_unlock(t_parent);
+            if (is_ancestor(s_path, t_path)) {
+                unwind_path(s_parent);
+                subtree_unlock(s_dir);
+                unwind_path(t_parent);
+                writer_unlock(t_parent);
+                return EANCMOVE; // No directory can be moved to its descendant
+            }
+            unwind_path(s_parent);
+            subtree_unlock(s_dir);
             unwind_path(t_parent);
+            writer_unlock(t_parent);
+            return EEXIST; // There already exists a directory with the same name as the target
         }
-        return EEXIST; // There already exists a directory with the same name as the target
-    }
 
-    // Pop and insert the source
-    writer_lock(s_parent);
-    s_dir = pop_subdir(s_parent, s_name);
-    if (s_parent != t_parent) writer_unlock(s_parent);
-    hmap_insert(t_parent->subdirectories, t_name, s_dir);
+        // Pop and insert the source
+        writer_lock(s_parent);
+        s_dir = pop_subdir(s_parent, s_name);
+        writer_unlock(s_parent);
+        hmap_insert(t_parent->subdirectories, t_name, s_dir);
 
-    subtree_unlock(s_dir);
-    writer_unlock(t_parent);
-    if (s_parent != t_parent) {
+        unwind_path(s_parent);
         unwind_path(t_parent);
+        subtree_unlock(s_dir);
+        writer_unlock(t_parent);
+        return SUCCESS;
     }
-    unwind_path(s_parent);
+    else {
+        t_parent = s_parent;
 
-    return SUCCESS;
+        // Check if target already exists
+        if (hmap_get(t_parent->subdirectories, t_name)) {
+            if (strcmp(s_path, t_path) == 0) {
+                unwind_path(s_parent);
+                subtree_unlock(s_dir);
+                return SUCCESS; // The source and target are the same - nothing to move
+            }
+            if (is_ancestor(s_path, t_path)) {
+                unwind_path(s_parent);
+                subtree_unlock(s_dir);
+                return EANCMOVE; // No directory can be moved to its descendant
+            }
+            unwind_path(s_parent);
+            subtree_unlock(s_dir);
+            return EEXIST; // There already exists a directory with the same name as the target
+        }
+
+        // Pop and insert the source
+        writer_lock(s_parent);
+        s_dir = pop_subdir(s_parent, s_name);
+        hmap_insert(t_parent->subdirectories, t_name, s_dir);
+
+        unwind_path(s_parent);
+        subtree_unlock(s_dir);
+        return SUCCESS;
+    }
 }
 
 Tree* chamski_get(Tree* tree, const char* path) {

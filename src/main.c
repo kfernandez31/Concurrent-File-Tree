@@ -1,5 +1,4 @@
 #include "Tree.h"
-#include "mtwister.h"
 #include <stdarg.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -35,7 +34,6 @@ const char *dir_names[] = {"/a/", "/b/", "/c/", "/d/", "/e/", "/f/",
 const char *example_paths[] = {"/a/", "/b/", "/a/b/", "/b/a/", "/b/a/d/", "/a/b/c/", "/a/b/d/"};
 Tree *tree = NULL;
 pthread_mutex_t mutex;
-MTRand r;
 
 /* ------------------------------ Helper functions ------------------------------ */
 static void init_mutex(pthread_mutex_t *mtx) {
@@ -73,7 +71,7 @@ static inline void init_example_tree() {
 
 /* ------------------------------ Runnables ------------------------------ */
 static void* runnable_list(void* ignored) {
-    size_t i = genRandLong(&r) % 2;
+    size_t i = rand() % 2;
 
     char *str = tree_list(tree, dir_names[i]);
 
@@ -89,7 +87,7 @@ static void* runnable_list(void* ignored) {
 }
 
 static void* runnable_create(void* ignored) {
-    size_t i = genRandLong(&r) % TEST_DIR_COUNT;
+    size_t i = rand() % TEST_DIR_COUNT;
 
     if (tree_create(tree, dir_names[i]) == 0) {
         log_with_thread_name("Successfully created directory: %s", dir_names[i]);
@@ -102,7 +100,7 @@ static void* runnable_create(void* ignored) {
 }
 
 static void* runnable_remove(void* ignored) {
-    size_t i = genRandLong(&r) % TEST_DIR_COUNT;
+    size_t i = rand() % TEST_DIR_COUNT;
 
     if (tree_remove(tree, dir_names[i]) == 0) {
         log_with_thread_name("Successfully removed directory: %s", dir_names[i]);
@@ -228,7 +226,6 @@ int main(void) {
     init_mutex(&mutex);
 
     srand(time(NULL));
-    r = seedRand(rand());
 
     /* Sequential tests */
     TEST_tree_move_example();
