@@ -13,8 +13,9 @@
 
 int main() {
 	fprintf(stderr, "Each test/subtest should run in less than 1 second.\n");
-//	sequential_small();
-//    valid_path();
+	sequential_small();
+    //TODO: dorobić sprawdzenie po drzewku, czy wszystkie refcounty spadły do 0
+    valid_path();
     sequential_big_random();
 //    concurrent_same_as_some_sequential();
 

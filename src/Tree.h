@@ -46,3 +46,5 @@ int tree_remove(Tree* tree, const char* path);
   * @return : error code / success
   */
 int tree_move(Tree *tree, const char *s_path, const char *t_path);
+
+Tree* chamski_get(Tree* tree, const char* path);
