@@ -16,9 +16,9 @@ int main() {
 //	sequential_small();
     //TODO: dorobić sprawdzenie po drzewku, czy wszystkie refcounty spadły do 0
 //    valid_path();
-    sequential_big_random();
+//    sequential_big_random();
 //    concurrent_same_as_some_sequential();
 
-//	deadlock();
+	deadlock();
 //	liveness();
 }

@@ -4609,10 +4609,7 @@ void sequential_big_random() {
 	assert(f(tree_move(tree, "/", "/b/b/a/")) == EBUSY);
 	assert(f(tree_create(tree, "/a/a/b/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/b/b/b/a/", "/a/b/b/")) == ENOENT);
-    Tree *c = chamski_get(tree, "/c/");
-    Tree *cc = chamski_get(tree, "/c/c/");
-    Tree *ccb = chamski_get(tree, "/c/c/b/");
-	assert(f(tree_create(tree, "/c/c/b/c/")) == ENOENT); //TODO: unwind_path: Assertion `pthread_mutex_lock(&(node)->var_protection) == SUCCESS' failed.
+	assert(f(tree_create(tree, "/c/c/b/c/")) == ENOENT);
 	assert(f(tree_remove(tree, "/b/b/")) == 0);
 	assert(f(tree_create(tree, "/a/b/c/b/")) == ENOENT);
 	assert(f(tree_move(tree, "/a/b/c/", "/a/b/a/a/")) == ENOENT);
@@ -10011,5 +10008,6 @@ void sequential_big_random() {
 	assert(f(tree_create(tree, "/c/a/a/c/")) == ENOENT);
 	assert(f(tree_create(tree, "/")) == EEXIST);
 	assert(f(tree_move(tree, "/b/c/b/", "/b/b/b/a/")) == ENOENT);
+
 	tree_free(tree);
 }
