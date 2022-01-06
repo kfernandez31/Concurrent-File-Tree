@@ -42,25 +42,7 @@ const char* split_path(const char* path, char* component);
 //    Then the last component will be copied there (without any '/' characters).
 // If path is "/", returns NULL and leaves `component` unchanged.
 // Otherwise the result is a valid path.
-void make_path_to_parent(const char* path, char* component, char parent_path[MAX_FOLDER_NAME_LENGTH + 1]);
-
-/**
- * Gets the name and length of `n`-th directory along the path starting from the root.
- * @param path : file path
- * @param n : depth of the directory (must be > 0)
- * @param index : index of the directory in the path
- * @param length : length of the directory
- */
-//void get_nth_dir_name_and_length(const char *path, const size_t n, size_t *index, size_t *length);
-
-/**
- * Checks whether both directories lie on the same path in a tree,
- * and if path2 branches out from path1.
- * @param path1 : path to the first directory
- * @param path2 : path to the second directory
- * @return : whether the first directory is an ancestor of the second
- */
-bool is_ancestor(const char *path1, const char *path2);
+void make_path_to_parent(const char* path, char* component, char parent_path[MAX_PATH_LENGTH + 1]);
 
 // Return an array containing all keys, lexicographically sorted.
 // The result is null-terminated.
@@ -72,3 +54,20 @@ const char** make_map_contents_array(HashMap* map);
 // The result has no trailing comma. An empty map yields an empty string.
 // The caller should free the result.
 char* make_map_contents_string(HashMap* map);
+
+/**
+ * Checks whether both directories lie on the same path in a tree,
+ * and if path2 branches out from path1.
+ * @param path1 : path to the first directory
+ * @param path2 : path to the second directory
+ * @return : whether the first directory is an ancestor of the second
+ */
+bool is_ancestor(const char* path1, const char* path2);
+
+/**
+ * Stores the path to the last common ancestor (LCA) of the two paths in `lca_path`.
+ * @param path1 : first path
+ * @param path2 : second path
+ * @param lca_path : path to the LCA
+ */
+void make_path_to_LCA(const char* path1, const char* path2, char lca_path[MAX_PATH_LENGTH + 1]);

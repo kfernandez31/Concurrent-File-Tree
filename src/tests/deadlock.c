@@ -52,7 +52,7 @@ void run_tests_for_mask(int mask) {
 		assert(pthread_create(&th[i], &attr, run_operations, data) == 0);
 	}
 
-	for(int i = 0; i < THREAD_COUNT; ++i) {
+	for (int i = 0; i < THREAD_COUNT; ++i) {
 		void *retval;
 		assert(pthread_join(th[i], &retval) == 0);
 		assert(retval == NULL);
@@ -62,8 +62,8 @@ void run_tests_for_mask(int mask) {
 }
 
 void deadlock() {
-    int mask = (1 << 0);
-    for (size_t i = 0; i < 1000000; i++) {
+    int mask = 2;
+    for (size_t i = 0; i < 10000; i++) {
         printf("- running deadlock test for mask %d [%zu]...\n", mask, i);
         run_tests_for_mask(mask);
     }

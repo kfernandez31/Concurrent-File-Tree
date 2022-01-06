@@ -47,7 +47,7 @@ const char* split_path(const char* path, char* component) {
     return subpath;
 }
 
-void make_path_to_parent(const char* path, char* component, char parent_path[MAX_FOLDER_NAME_LENGTH + 1]) {
+void make_path_to_parent(const char* path, char* component, char parent_path[MAX_PATH_LENGTH + 1]) {
     if (strcmp(path, "/") == 0) {
         return; // Path is "/".
     }
@@ -69,46 +69,6 @@ void make_path_to_parent(const char* path, char* component, char parent_path[MAX
         strncpy(component, p + 1, component_len);
         component[component_len] = '\0';
     }
-}
-
-size_t get_path_depth(const char *path) {
-    size_t res = 0;
-    while (*path) {
-        if (*path == SEPARATOR) {
-            res++;
-        }
-        path++;
-    }
-    return res - 1;
-}
-
-void get_nth_dir_name_and_length(const char *path, const size_t n, size_t *index, size_t *length) {
-    size_t len = strlen(path);
-    size_t seps = 0;
-
-    if (strcmp(path, "/") == 0) {
-        *index = 0;
-        *length = 1;
-        return;
-    }
-
-    for (size_t i = 0; i < len; i++) {
-        if (path[i] == SEPARATOR) {
-            seps++;
-        }
-        if (seps == n) {
-            *index = i;
-            *length = 0;
-            for (i = *index + 1; path[i] != SEPARATOR; i++) {
-                (*length)++;
-            }
-            return;
-        }
-    }
-}
-
-bool is_ancestor(const char *path1, const char *path2) {
-    return (strncmp(path1, path2, strlen(path1)) == 0) && (strcmp(path1, path2) != 0);
 }
 
 // A wrapper for using strcmp in qsort.
@@ -161,4 +121,33 @@ char* make_map_contents_string(HashMap* map) {
     *position = '\0';
     free(keys);
     return result;
+}
+
+bool is_ancestor(const char *path1, const char *path2) {
+    return (strncmp(path1, path2, strlen(path1)) == 0) && (strcmp(path1, path2) != 0);
+}
+
+void make_path_to_LCA(const char* path1, const char* path2, char lca_path[MAX_PATH_LENGTH + 1]) {
+    char comp1[MAX_FOLDER_NAME_LENGTH + 1], comp2[MAX_FOLDER_NAME_LENGTH + 1];
+    lca_path[0] = SEPARATOR;
+    size_t i = 0;
+/*    while ((path1 = split_path(path1, comp1)) && (path2 = split_path(path2, comp2))) {
+        if (strcmp(comp1, comp2) == 0) {
+            strcpy(lca_path + used_len, comp1);
+            lca_path[++used_len] = SEPARATOR;
+            used_len++;
+        }
+    }*/
+
+    while ((path1[i] != '\0' && path2[i] != '\0') && path1[i] == path2[i]) {
+        lca_path[i] = path1[i];
+        i++;
+    }
+    lca_path[i] = '\0';
+    if (i > 1) {
+        i -= 2;
+        while (lca_path[i] != SEPARATOR) {
+            lca_path[i--] = '\0';
+        }
+    }
 }
