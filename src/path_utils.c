@@ -1,4 +1,5 @@
 #include "path_utils.h"
+#include "safe_allocations.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -79,7 +80,7 @@ static int compare_string_pointers(const void* p1, const void* p2) {
 
 const char** make_map_contents_array(HashMap* map) {
     size_t n_keys = hmap_size(map);
-    const char** result = calloc(n_keys + 1, sizeof(char*));
+    const char** result = safe_calloc(n_keys + 1, sizeof(char*));
     HashMapIterator it = hmap_iterator(map);
     const char** key = result;
     void* value = NULL;
@@ -101,13 +102,13 @@ char* make_map_contents_string(HashMap* map) {
     // Return empty string if map is empty.
     if (!result_size) {
         // Note we can't just return "", as it can't be free'd.
-        char* result = malloc(1);
+        char* result = safe_malloc(1);
         *result = '\0';
         free(keys);
         return result;
     }
 
-    char* result = malloc(result_size);
+    char* result = safe_malloc(result_size);
     char* position = result;
     for (const char** key = keys; *key; ++key) {
         size_t keylen = strlen(*key);
@@ -128,26 +129,18 @@ bool is_ancestor(const char *path1, const char *path2) {
 }
 
 void make_path_to_LCA(const char* path1, const char* path2, char lca_path[MAX_PATH_LENGTH + 1]) {
-    char comp1[MAX_FOLDER_NAME_LENGTH + 1], comp2[MAX_FOLDER_NAME_LENGTH + 1];
-    lca_path[0] = SEPARATOR;
+    assert(strcmp(path1, "/") != 0 && strcmp(path2, "/") != 0);
+    char buff[MAX_PATH_LENGTH + 1] ={0};
     size_t i = 0;
-/*    while ((path1 = split_path(path1, comp1)) && (path2 = split_path(path2, comp2))) {
-        if (strcmp(comp1, comp2) == 0) {
-            strcpy(lca_path + used_len, comp1);
-            lca_path[++used_len] = SEPARATOR;
-            used_len++;
-        }
-    }*/
-
-    while ((path1[i] != '\0' && path2[i] != '\0') && path1[i] == path2[i]) {
-        lca_path[i] = path1[i];
+    while (path1[i] == path2[i] && (path1[i] && path2[i])) {
+        buff[i] = path1[i];
         i++;
     }
-    lca_path[i] = '\0';
-    if (i > 1) {
-        i -= 2;
-        while (lca_path[i] != SEPARATOR) {
-            lca_path[i--] = '\0';
-        }
+
+    if (path1[i] && path2[i]) {
+        strcpy(lca_path, buff);
+    }
+    else {
+        make_path_to_parent(buff, NULL, lca_path);
     }
 }
