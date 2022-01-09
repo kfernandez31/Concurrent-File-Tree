@@ -28,11 +28,11 @@
     } while (0)
 
 /** Performs a block of code under the node's mutex **/
-#define UNDER_MUTEX(mutex, code_block)                                \
-do {                                                                  \
-    PTHREAD_CHECK(pthread_mutex_lock(mutex));                         \
-    code_block;                                                       \
-    PTHREAD_CHECK(pthread_mutex_unlock(mutex));                       \
+#define UNDER_MUTEX(mutex, code_block)           \
+do {                                             \
+    PTHREAD_CHECK(pthread_mutex_lock(mutex));    \
+    code_block;                                  \
+    PTHREAD_CHECK(pthread_mutex_unlock(mutex));  \
 } while(0);
 
 struct Tree {
