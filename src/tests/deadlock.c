@@ -1,10 +1,11 @@
 // Dla każdej maski (maski są wyjaśnione w utils.h) odpala wątki wykonujące
 // losowe takie operacje.
 
-#define THREAD_COUNT 8 //TODO: do 8
+#define THREAD_COUNT 8
 #define OPERATIONS_IN_THREAD 5000
 
 #include "utils.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -51,7 +52,7 @@ void run_tests_for_mask(int mask) {
 		assert(pthread_create(&th[i], &attr, run_operations, data) == 0);
 	}
 
-	for (int i = 0; i < THREAD_COUNT; ++i) {
+	for(int i = 0; i < THREAD_COUNT; ++i) {
 		void *retval;
 		assert(pthread_join(th[i], &retval) == 0);
 		assert(retval == NULL);
@@ -61,14 +62,10 @@ void run_tests_for_mask(int mask) {
 }
 
 void deadlock() {
-    int mask = 8;
-    for (size_t i = 0; i < 10000; i++) {
-        printf("- running deadlock test for mask %d [%zu]...\n", mask, i);
-        run_tests_for_mask(mask);
+    for (int i = 0; i < 1000; i++) {
+        for (int mask = 1; mask < (1 << 4); ++mask) {
+            printf("- running deadlock test for mask %d...\n", mask);
+            run_tests_for_mask(mask);
+        }
     }
-
-/*	for(int mask = 1; mask < (1 << 4); ++mask) {
-		printf("- running deadlock test for mask %d...\n", mask);
-		run_tests_for_mask(mask);
-	}*/
 }

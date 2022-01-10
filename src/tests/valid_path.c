@@ -4,6 +4,8 @@
 #include "../Tree.h"
 
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -14,7 +16,6 @@ const int MAX_FOLDER_NAME_LENGTH = 255;
 bool my_path_valid(const char *path) {
 	Tree *tree = tree_new();	
 	int ret = tree_create(tree, path);
-    assert_zero(tree);
 	tree_free(tree);
 	return ret != EINVAL;
 }

@@ -67,7 +67,6 @@ void *run_operations_individual(void *data) {
 		run_operation(thread_data->tree, operation);
 		free_operation(operation);
 	}
-    free(thread_data);
 	return NULL;
 }
 

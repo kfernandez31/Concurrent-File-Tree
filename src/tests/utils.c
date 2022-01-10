@@ -108,8 +108,7 @@ void run_some_creates(int *curr_seed, Tree *tree) {
 	for(int i = 0; i < 100; ++i) {
 		char *s = get_random_small_path(curr_seed);
 		tree_create(tree, s);
-        free(s);
-    }
+	}
 }
 
 void print_operation(const Operation *operation) {
