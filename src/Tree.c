@@ -44,7 +44,7 @@ struct Tree {
     pthread_mutex_t var_protection;          /** Mutual exclusion for variable access **/
     pthread_cond_t reader_cond;              /** Condition to hang readers **/
     pthread_cond_t writer_cond;              /** Condition to hang writers **/
-    pthread_cond_t refcount_cond;            /** Condition to wait on until all subtree operations finish **/
+    pthread_cond_t subtree_cond;             /** Condition to wait on until all subtree operations finish **/
     size_t r_count, w_count, r_wait, w_wait; /** Counters of active and waiting readers/writers **/
     size_t refcount;                         /** Reference count of operations currently performed in the subtree **/
 };
@@ -140,13 +140,13 @@ static void writer_unlock(Tree* tree) {
 }
 
 /**
- * Waits for all operations to finish in nodes below `tree`.
+ * Waits for all operations to finish in the subtree of the `node`.
  * @param node : node in a file tree
  */
-static void wait_on_refcount_cond(Tree* node) {
+static void wait_until_subtree_activity_ceases(Tree* node) {
     UNDER_MUTEX(&node->var_protection, // This is only to satisfy `pthread_cond_wait`
-        while (node->refcount > 1)     // Wait if necessary
-            PTHREAD_CHECK(pthread_cond_wait(&node->refcount_cond, &node->var_protection));
+        while (node->refcount > 0)     // Wait if necessary
+            PTHREAD_CHECK(pthread_cond_wait(&node->subtree_cond, &node->var_protection));
     );
 }
 
@@ -161,8 +161,8 @@ static void unwind_path(Tree *start, Tree *end) {
         UNDER_MUTEX(&start->var_protection,
             next = start->parent;
             start->refcount--;
-            if (start->refcount == 1)
-                PTHREAD_CHECK(pthread_cond_signal(&start->refcount_cond));
+            if (start->refcount == 0)
+                PTHREAD_CHECK(pthread_cond_signal(&start->subtree_cond));
         );
         start = next;
     }
@@ -220,7 +220,7 @@ Tree* tree_new() {
     PTHREAD_CHECK(pthread_mutex_init(&tree->var_protection, NULL));
     PTHREAD_CHECK(pthread_cond_init(&tree->reader_cond, NULL));
     PTHREAD_CHECK(pthread_cond_init(&tree->writer_cond, NULL));
-    PTHREAD_CHECK(pthread_cond_init(&tree->refcount_cond, NULL));
+    PTHREAD_CHECK(pthread_cond_init(&tree->subtree_cond, NULL));
 
     return tree;
 }
@@ -238,7 +238,7 @@ void tree_free(Tree* tree) {
     hmap_free(tree->subdirectories);
     PTHREAD_CHECK(pthread_cond_destroy(&tree->writer_cond));
     PTHREAD_CHECK(pthread_cond_destroy(&tree->reader_cond));
-    PTHREAD_CHECK(pthread_cond_destroy(&tree->refcount_cond));
+    PTHREAD_CHECK(pthread_cond_destroy(&tree->subtree_cond));
     PTHREAD_CHECK(pthread_mutex_destroy(&tree->var_protection));
     free(tree);
     tree = NULL;
@@ -368,7 +368,6 @@ int tree_move(Tree* tree, const char* s_path, const char* t_path) {
             writer_unlock(lca);
             return ENOENT; // The source's parent doesn't exist
         }
-        wait_on_refcount_cond(s_parent);
         if (!(t_parent = get_node(lca, t_parent_path + index_after_lca, true, WRITER))) {
             if (s_parent != lca) {
                 unwind_path(s_parent, lca);
@@ -378,7 +377,7 @@ int tree_move(Tree* tree, const char* s_path, const char* t_path) {
             return ENOENT; // The source's parent doesn't exist
         }
         // Find source
-        if (!hmap_get(s_parent->subdirectories, s_name)) {
+        if (!(s_dir = hmap_get(s_parent->subdirectories, s_name))) {
             CLEANUP();
             return ENOENT; // The source doesn't exist
         }
@@ -391,8 +390,9 @@ int tree_move(Tree* tree, const char* s_path, const char* t_path) {
             CLEANUP();
             return EEXIST; // There already exists a directory with the same name as the target
         }
+        wait_until_subtree_activity_ceases(s_dir);
         // Pop and insert the source
-        s_dir = pop_subdir(s_parent, s_name);
+        pop_subdir(s_parent, s_name);
         s_dir->parent = t_parent;
         hmap_insert(t_parent->subdirectories, t_name, s_dir);
         CLEANUP();
@@ -414,10 +414,9 @@ int tree_move(Tree* tree, const char* s_path, const char* t_path) {
             writer_unlock(lca);
             return ENOENT; // The source's parent doesn't exist
         }
-        wait_on_refcount_cond(s_parent);
         t_parent = s_parent;
         // Find source
-        if (!hmap_get(s_parent->subdirectories, s_name)) {
+        if (!(s_dir = hmap_get(s_parent->subdirectories, s_name))) {
             CLEANUP();
             return ENOENT; // The source doesn't exist
         }
@@ -434,6 +433,7 @@ int tree_move(Tree* tree, const char* s_path, const char* t_path) {
             CLEANUP();
             return EEXIST; // There already exists a directory with the same name as the target
         }
+        wait_until_subtree_activity_ceases(s_dir);
         // Pop and insert the source
         s_dir = pop_subdir(s_parent, s_name);
         hmap_insert(t_parent->subdirectories, t_name, s_dir);
