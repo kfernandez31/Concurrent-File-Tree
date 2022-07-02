@@ -25,7 +25,7 @@ set(SOURCE_FILES
         src/safe_allocations.h
         )
 
-# Wskazujemy plik wykonywalny (kalkulatora).
+# Wskazujemy plik wykonywalny
 add_executable(file_tree ${SOURCE_FILES})
 
 set(TESTS_PATH "src/tests/")
